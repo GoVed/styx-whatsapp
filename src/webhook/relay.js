@@ -80,6 +80,15 @@ export class StyxRelay {
   }
 
   /**
+   * Clears in-memory session cache and updates disk file.
+   */
+  clearSessions() {
+    this.sessions.clear();
+    this.saveSessionsToDisk();
+    logger.info('Cleared WhatsApp-Styx session mapping cache');
+  }
+
+  /**
    * Starts listening to inbound bridge messages and forwarding to Styx.
    */
   start() {
@@ -129,12 +138,27 @@ export class StyxRelay {
       ? `${eventData.senderName} (${eventData.from})`
       : eventData.from;
 
-    const chatIdentifier = eventData.chatJid || eventData.from || eventData.senderJid;
-    const existingSessionId =
-      (eventData.chatJid && this.sessions.get(eventData.chatJid)) ||
-      (eventData.from && this.sessions.get(eventData.from)) ||
-      (eventData.senderJid && this.sessions.get(eventData.senderJid)) ||
-      null;
+    const isGroup = Boolean(eventData.isGroup);
+    const chatIdentifier = isGroup
+      ? eventData.chatJid
+      : (eventData.chatJid || eventData.from || eventData.senderJid);
+
+    let existingSessionId = null;
+    if (isGroup) {
+      if (eventData.chatJid) {
+        existingSessionId = this.sessions.get(eventData.chatJid) || null;
+      }
+    } else {
+      existingSessionId =
+        (eventData.chatJid && this.sessions.get(eventData.chatJid)) ||
+        (eventData.from && this.sessions.get(eventData.from)) ||
+        (eventData.senderJid && this.sessions.get(eventData.senderJid)) ||
+        null;
+    }
+
+    const groupSubject = isGroup
+      ? (eventData.groupName || eventData.chatName || eventData.subject || null)
+      : null;
 
     const requestBody = {
       protocol: 'whatsapp',
@@ -147,10 +171,12 @@ export class StyxRelay {
         from: eventData.from,
         sender_name: eventData.senderName || 'Unknown',
         sender_jid: eventData.senderJid,
+        group_name: groupSubject,
+        chat_name: eventData.chatName || null,
         message: eventData.message || '',
         timestamp: eventData.timestamp || Math.floor(Date.now() / 1000),
         message_id: eventData.messageId,
-        is_group: Boolean(eventData.isGroup),
+        is_group: isGroup,
         chat_jid: eventData.chatJid,
         media_url: eventData.mediaUrl || null,
         media_type: eventData.mediaType || eventData.type || null,
@@ -186,11 +212,15 @@ export class StyxRelay {
         };
       }
 
-      // Record session mapping from Styx response
+      // Record session mapping from Styx response (isolating group chats strictly to chatJid)
       if (responseData?.session_id) {
-        if (eventData.chatJid) this.sessions.set(eventData.chatJid, responseData.session_id);
-        if (eventData.from) this.sessions.set(eventData.from, responseData.session_id);
-        if (eventData.senderJid) this.sessions.set(eventData.senderJid, responseData.session_id);
+        if (isGroup) {
+          if (eventData.chatJid) this.sessions.set(eventData.chatJid, responseData.session_id);
+        } else {
+          if (eventData.chatJid) this.sessions.set(eventData.chatJid, responseData.session_id);
+          if (eventData.from) this.sessions.set(eventData.from, responseData.session_id);
+          if (eventData.senderJid) this.sessions.set(eventData.senderJid, responseData.session_id);
+        }
         this.saveSessionsToDisk();
       }
 

@@ -163,7 +163,15 @@ export class MockWhatsAppBridge extends WhatsAppBridgeBase {
    * @param {string} [options.groupId]
    * @returns {object} The dispatched inbound event object
    */
-  simulateInboundMessage({ from = '+1234567890', message = 'Hello from WhatsApp!', senderName = 'Alice', isGroup = false, groupId = null } = {}) {
+  simulateInboundMessage({
+    from = '+1234567890',
+    message = 'Hello from WhatsApp!',
+    senderName = 'Alice',
+    isGroup = false,
+    groupId = null,
+    groupName = null,
+    chatName = null
+  } = {}) {
     const senderJid = this.formatJid(from);
     const chatJid = isGroup && groupId ? this.formatJid(groupId) : senderJid;
     const messageId = `MOCK_IN_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
@@ -173,6 +181,8 @@ export class MockWhatsAppBridge extends WhatsAppBridgeBase {
       from: from.replace(/@.*$/, ''),
       senderJid,
       senderName,
+      chatName: chatName || groupName || (isGroup ? 'Mock Group' : senderName),
+      groupName: groupName || (isGroup ? 'Mock Group' : null),
       message,
       messageId,
       timestamp,

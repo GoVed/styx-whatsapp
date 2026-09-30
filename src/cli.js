@@ -42,8 +42,8 @@ export function createCli() {
       const relay = createRelay(bridge, { styxApiUrl: styxUrl });
       relay.start();
 
-      // Start HTTP server sharing the same bridge instance
-      const { server } = await startHttpServer({ port, host, mode, bridge });
+      // Start HTTP server sharing the same bridge instance and relay
+      const { server } = await startHttpServer({ port, host, mode, bridge, relay });
 
       const shutdown = async () => {
         logger.info('Shutting down WhatsApp daemon...');

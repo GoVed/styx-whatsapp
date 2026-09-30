@@ -89,9 +89,31 @@ assert.equal(capturedRequest.mode, 'chat');
 assert.equal(capturedRequest.channel_id, '15551234567@s.whatsapp.net');
 console.log('✓ Subsequent turn passes existing session_id, channel_id, and mode: chat');
 
+// Test group message forwarding and participant isolation
+bridge.simulateInboundMessage({
+  from: '+15559876543',
+  senderName: 'Bob Participant',
+  isGroup: true,
+  groupId: '120363028840427086@g.us',
+  groupName: 'Computer Scientist',
+  message: 'Hey all, who is writing the research paper?'
+});
+await new Promise(r => setTimeout(r, 200));
+
+assert.equal(capturedRequest.payload.is_group, true);
+assert.equal(capturedRequest.payload.group_name, 'Computer Scientist');
+assert.equal(capturedRequest.channel_id, '120363028840427086@g.us');
+assert.equal(capturedRequest.payload.sender_name, 'Bob Participant');
+console.log('✓ Group message forwards group_name and keys off group chat_jid');
+
+// Verify that Bob's direct JID is NOT mapped to the group session ID
+assert.notEqual(relay.getSession('15559876543@s.whatsapp.net'), 'mock-styx-session-uuid');
+assert.equal(relay.getSession('120363028840427086@g.us'), 'mock-styx-session-uuid');
+console.log('✓ Participant isolation verified: group session is not assigned to individual participant JID');
+
 // Check relay stats
 const stats = relay.getStats();
-assert.equal(stats.relayedCount, 2);
+assert.equal(stats.relayedCount, 3);
 assert.equal(stats.failedCount, 0);
 assert.ok(stats.lastRelayedAt);
 console.log('✓ Relay stats verified');

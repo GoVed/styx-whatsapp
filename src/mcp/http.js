@@ -17,9 +17,10 @@ const __dirname = path.dirname(__filename);
 /**
  * Creates and configures the Express application for MCP HTTP transport & management.
  * @param {import('../bridge/base.js').WhatsAppBridgeBase} bridge
+ * @param {import('../webhook/relay.js').StyxRelay} [relay]
  * @returns {import('express').Express}
  */
-export function createHttpApp(bridge) {
+export function createHttpApp(bridge, relay = null) {
   const app = express();
   app.use(express.json({ limit: '50mb' }));
   app.use(express.text({ limit: '50mb' }));
@@ -88,6 +89,7 @@ export function createHttpApp(bridge) {
       server: SERVER_INFO,
       bridge: bridge.getStatus(),
       history: bridge.getHistory(10),
+      relay: relay ? relay.getStats() : null,
       config: {
         mode: config.mode,
         styxApiUrl: config.styxApiUrl,
@@ -96,6 +98,26 @@ export function createHttpApp(bridge) {
         httpHost: config.httpHost
       }
     });
+  });
+
+  // Styx Session cache inspect and clear endpoints
+  app.get('/sessions', (req, res) => {
+    if (!relay) {
+      return res.status(404).json({ success: false, error: 'Relay not attached to HTTP server' });
+    }
+    res.json({
+      success: true,
+      count: relay.sessions.size,
+      sessions: Object.fromEntries(relay.sessions)
+    });
+  });
+
+  app.post('/sessions/clear', (req, res) => {
+    if (!relay) {
+      return res.status(404).json({ success: false, error: 'Relay not attached to HTTP server' });
+    }
+    relay.clearSessions();
+    res.json({ success: true, message: 'Sessions cache cleared successfully' });
   });
 
   // Live QR data polling endpoint
@@ -240,7 +262,8 @@ export async function startHttpServer(options = {}) {
     });
   }
 
-  const app = createHttpApp(bridge);
+  const relay = options.relay || null;
+  const app = createHttpApp(bridge, relay);
 
   return new Promise((resolve, reject) => {
     const server = app.listen(port, host, () => {
@@ -248,7 +271,7 @@ export async function startHttpServer(options = {}) {
         { port, host, mode },
         `Styx WhatsApp MCP HTTP Server listening at http://${host}:${port}`
       );
-      resolve({ server, app, port, host, bridge });
+      resolve({ server, app, port, host, bridge, relay });
     });
 
     server.on('error', (err) => {
