@@ -1,0 +1,122 @@
+[
+  {
+    "id": "cat_sad_crying",
+    "name": "Sad Crying Cat",
+    "category": "cat",
+    "description": "Crying cat with oversized teardrops and trembling lip. Perfect for sorrowful declines and regretful apologies.",
+    "emotional_context": "declining outing with friends, apologizing, feeling sad, regret, cannot make it, bummed",
+    "tags": ["sad", "cat", "crying", "tears", "sorry", "decline", "rain", "apology", "sad cat", "miss you", "regret"]
+  },
+  {
+    "id": "cat_shrug",
+    "name": "Shrugging Cat",
+    "category": "cat",
+    "description": "Nonchalant cat raising paws in a shrug. Expresses indifference, uncertainty, or carefree neutrality.",
+    "emotional_context": "unsure, indifferent, don't know, shrug, whatever, whatever works, ambiguous",
+    "tags": ["shrug", "cat", "maybe", "idk", "indifferent", "whatever", "shrugging cat", "neutral", "whocares"]
+  },
+  {
+    "id": "cat_celebrate",
+    "name": "Party Celebration Cat",
+    "category": "cat",
+    "description": "Ecstatic cat wearing a party hat popping confetti and cheering. High-energy celebration.",
+    "emotional_context": "celebrating success, party, congratulations, victory, milestones, exciting news",
+    "tags": ["celebrate", "party", "cat", "confetti", "yay", "hooray", "success", "cheers", "celebration cat", "win", "congrats"]
+  },
+  {
+    "id": "cat_thumbs_up",
+    "name": "Thumbs Up Cat",
+    "category": "cat",
+    "description": "Encouraging cat giving a solid thumbs up with a confident wink. Confirms agreement and roger that.",
+    "emotional_context": "acknowledging, agreement, confirmed, roger that, sounds good, thumbs up, approval",
+    "tags": ["thumbs up", "cat", "ok", "cool", "approved", "roger", "good", "thumbs up cat", "affirmative", "got it"]
+  },
+  {
+    "id": "cat_facepalm",
+    "name": "Facepalm Cat",
+    "category": "cat",
+    "description": "Cat with paw planted firmly on face in humorous disbelief, frustration, or exasperation.",
+    "emotional_context": "disbelief, frustration, facepalm, silly mistake, exasperation, oops",
+    "tags": ["facepalm", "cat", "disbelief", "oops", "headache", "fail", "facepalm cat", "smh", "face-palm"]
+  },
+  {
+    "id": "cat_typing_laptop",
+    "name": "Hacker Cat in Deep Work",
+    "category": "cat",
+    "description": "Cat furiously typing on a glowing laptop terminal with laser focus. Shows operator is locked in deep work.",
+    "emotional_context": "busy, coding, deep work, locked in, working hard, laptop, focusing, cannot talk right now",
+    "tags": ["coding", "working", "busy", "laptop", "hacker", "deep work", "cat", "focus", "grinding", "terminal"]
+  },
+  {
+    "id": "cat_sleepy",
+    "name": "Sleepy Blanket Cat",
+    "category": "cat",
+    "description": "Cozy cat bundled up under blankets fast asleep with floating 'zzz'.",
+    "emotional_context": "tired, sleepy, going to bed, goodnight, exhausted, nap time, rest",
+    "tags": ["sleepy", "tired", "bed", "goodnight", "exhausted", "cat", "sleeping", "nap", "rest"]
+  },
+  {
+    "id": "cat_peace_out",
+    "name": "Peace Sign Fading Cat",
+    "category": "cat",
+    "description": "Cat throwing up a peace deuces sign and fading out. Expresses smooth exit or signing off.",
+    "emotional_context": "goodbye, peace out, signing off, leaving, gotta run, gtg, see ya",
+    "tags": ["bye", "peace", "leaving", "gtg", "vanish", "cat", "see ya", "peace out", "deuces"]
+  },
+  {
+    "id": "thumbs_up_classic",
+    "name": "Golden Thumbs Up",
+    "category": "reaction",
+    "description": "Clean, classic golden thumbs up icon for swift confirmation.",
+    "emotional_context": "agreement, affirmative, ok, roger, confirmation, all good",
+    "tags": ["thumbs up", "agree", "ok", "ack", "done", "yes", "confirm", "roger", "good"]
+  },
+  {
+    "id": "fire_lit",
+    "name": "Lit Flame",
+    "category": "reaction",
+    "description": "Vibrant blazing flame denoting excitement, hot takes, or outstanding work.",
+    "emotional_context": "hype, excitement, awesome, incredible work, lit, blazing",
+    "tags": ["fire", "lit", "awesome", "hot", "epic", "hype", "flame", "great"]
+  },
+  {
+    "id": "party_popper",
+    "name": "Festive Party Popper",
+    "category": "celebration",
+    "description": "Exploding party popper releasing streamers and glitter.",
+    "emotional_context": "milestone, celebrate, congrats, promotion, happy birthday, festive",
+    "tags": ["party", "celebrate", "congrats", "cheers", "win", "festive", "streamers", "hurray"]
+  },
+  {
+    "id": "mind_blown",
+    "name": "Mind Blown Galaxy",
+    "category": "reaction",
+    "description": "Head exploding with cosmic nebula and sparkles denoting awe and amazement.",
+    "emotional_context": "amazement, shock, impressed, genius, brilliant idea, awe",
+    "tags": ["mind blown", "shock", "galaxy", "genius", "crazy", "astounded", "wow"]
+  },
+  {
+    "id": "pleading_eyes",
+    "name": "Pleading Puppy Eyes",
+    "category": "reaction",
+    "description": "Big glossy pleading eyes expressing gentle begging, hopeful requests, or soft apology.",
+    "emotional_context": "pleading, please, begging, puppy eyes, soft apology, favor",
+    "tags": ["pleading", "please", "begging", "sorry", "forgive me", "sad", "puppy eyes", "hopeful"]
+  },
+  {
+    "id": "coffee_steam",
+    "name": "Steaming Morning Coffee",
+    "category": "lifestyle",
+    "description": "Freshly brewed mug of artisanal coffee releasing aromatic steam curls.",
+    "emotional_context": "morning greeting, caffeine, starting work, wake up, focus",
+    "tags": ["coffee", "morning", "caffeine", "wake up", "working", "mug", "breakfast", "start"]
+  },
+  {
+    "id": "dog_happy_wag",
+    "name": "Happy Wagging Dog",
+    "category": "animal",
+    "description": "Golden retriever happily panting and wagging tail enthusiastically.",
+    "emotional_context": "warm welcome, friendly, excited, happy, eager, positive vibe",
+    "tags": ["dog", "happy", "wag", "friendly", "golden", "excited", "welcome", "smile"]
+  }
+]

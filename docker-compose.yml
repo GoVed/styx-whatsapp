@@ -1,0 +1,31 @@
+services:
+  styx-whatsapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: styx-whatsapp-connector
+    restart: unless-stopped
+    ports:
+      - "8765:8765"
+    environment:
+      # Mode: "mock" (offline sandbox) or "live" (Baileys real WhatsApp Web QR)
+      - WHATSAPP_MODE=${WHATSAPP_MODE:-live}
+      - WHATSAPP_AUTH_DIR=/app/.auth_session
+      - STYX_API_URL=http://host.docker.internal:3000
+      - STYX_ACCESS_KEY=${STYX_ACCESS_KEY:-styx-local-dev-key}
+      - HTTP_PORT=8765
+      - HTTP_HOST=0.0.0.0
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    volumes:
+      # Mount auth session directory to preserve Baileys credentials across restarts
+      - ./.auth_session:/app/.auth_session:rw,z
+      - ./instructions.md:/app/instructions.md:ro
+      - ./src:/app/src:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8765/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s

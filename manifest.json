@@ -1,0 +1,73 @@
+{
+  "name": "whatsapp",
+  "display_name": "WhatsApp Connector",
+  "version": "1.0.0",
+  "description": "Isolated Bi-Directional WhatsApp Connect Micro-Daemon & MCP Tool for Styx Agent OS",
+  "container_name": "styx-whatsapp-connector",
+  "port": 8765,
+  "protocol": "whatsapp",
+  "instructions_file": "instructions.md",
+  "has_docker": true,
+  "tools": [
+    {
+      "name": "find_stickers",
+      "description": "Search the sticker catalog by emotional context & tags",
+      "risk_level": "LOW",
+      "policy": "AUTONOMOUS"
+    },
+    {
+      "name": "send_sticker",
+      "description": "Dispatch a sticker to a WhatsApp contact or group",
+      "risk_level": "HIGH",
+      "policy": "REQUIRE_APPROVAL"
+    },
+    {
+      "name": "send_message",
+      "description": "Send a plain text message to a WhatsApp contact or group chat",
+      "risk_level": "HIGH",
+      "policy": "REQUIRE_APPROVAL"
+    },
+    {
+      "name": "send_reaction",
+      "description": "Send an emoji reaction to a specific WhatsApp message",
+      "risk_level": "HIGH",
+      "policy": "REQUIRE_APPROVAL"
+    },
+    {
+      "name": "get_whatsapp_status",
+      "description": "Query bridge connection state, mode, and user info",
+      "risk_level": "CRITICAL",
+      "policy": "REQUIRE_APPROVAL"
+    },
+    {
+      "name": "get_chat_history",
+      "description": "Retrieve recent inbound and outbound message history",
+      "risk_level": "LOW",
+      "policy": "AUTONOMOUS"
+    },
+    {
+      "name": "list_chats",
+      "description": "List recent active WhatsApp chats and conversations",
+      "risk_level": "LOW",
+      "policy": "AUTONOMOUS"
+    },
+    {
+      "name": "simulate_inbound_message",
+      "description": "Simulate an incoming WhatsApp message and trigger reactive turn",
+      "risk_level": "LOW",
+      "policy": "AUTONOMOUS"
+    },
+    {
+      "name": "fetch_older_messages",
+      "description": "Requests earlier or older message history from the primary phone via on-demand peer sync",
+      "risk_level": "LOW",
+      "policy": "AUTONOMOUS"
+    },
+    {
+      "name": "import_chat_export",
+      "description": "Ingest complete historical WhatsApp chat export (.txt) with deduplication and chronologic ordering",
+      "risk_level": "LOW",
+      "policy": "AUTONOMOUS"
+    }
+  ]
+}
