@@ -85,7 +85,7 @@ flowchart LR
 - **Dual-Mode Bridge:** Switch effortlessly between an offline mock simulator (for automated testing and local development without WhatsApp credentials) and live multi-device WhatsApp Web connectivity via `@whiskeysockets/baileys`.
 - **QR Terminal Pairing:** Interactive QR code rendering directly in your terminal for WhatsApp Linked Devices pairing.
 - **Bi-Directional Styx OS Relay:** Inbound WhatsApp messages are instantly structured as `InboundToolEventRequest` payloads and delivered to Styx OS at `POST /api/tools/trigger`.
-- **Tone-Compliant Sticker Engine:** Implements the sticker and emotional context search protocol specified in `memory/skills/whatsapp_tone.md` (e.g. prioritizing cat/animal decline reactions, shrugs, and celebrations).
+- **Tone-Compliant Sticker Engine:** Implements the sticker and emotional context search protocol specified in `instructions.md` (e.g. prioritizing cat/animal decline reactions, shrugs, and celebrations).
 - **Full MCP 2024-11-05 Specification:** Exposes tools over standard line-delimited `stdio` JSON-RPC 2.0 (for direct Styx child process spawning) and `HTTP` transport (for containerized / background daemon setups).
 - **Auto-Registration Command:** One-line command to register this MCP tool server into Styx OS (`bin/styx-whatsapp register`).
 - **Security Sandboxing:** Enforces POSIX `0700` permission lockdown on session keys, redacts sensitive tokens in Pino logs, and routes logs exclusively to `stderr` to ensure `stdout` is pristine for JSON-RPC.
@@ -164,7 +164,7 @@ npm run login
 
 ## Sticker Catalog & Emotional Tone Etiquette
 
-Governed by `memory/skills/whatsapp_tone.md`, the connector features a ranked search engine:
+Governed by `instructions.md`, the connector features a ranked search engine:
 - Operator style: Brief, lowercase-friendly, emotional sticker reactions.
 - Declining invites: Evaluates schedule commitments, then searches for apologetic or animal decline stickers (e.g. `cat_sad_crying`).
 - Acknowledging / Celebrating: Searches for approval (`cat_thumbs_up`, `thumbs_up_classic`) or excitement (`cat_celebrate`, `fire_lit`, `party_popper`).
@@ -213,7 +213,7 @@ X-Styx-Access-Key: <STYX_ACCESS_KEY>
 }
 ```
 
-Styx Agent OS receives this, automatically generates a session titled `[WHATSAPP] Alice (+1234567890)`, loads memory skills (`skills/whatsapp_tone.md`), and queues an agent inference turn!
+Styx Agent OS receives this, automatically generates a session titled `[WHATSAPP] Alice (+1234567890)`, loads memory skills (`skills/whatsapp.md`), and queues an agent inference turn!
 
 ---
 

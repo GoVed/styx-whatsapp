@@ -20,7 +20,7 @@ assert.ok(categories.includes('cat'), 'Categories must include "cat"');
 assert.ok(categories.includes('reaction'), 'Categories must include "reaction"');
 console.log(`✓ Categories verified: ${categories.join(', ')}`);
 
-// 3. Search for "sad cat" (matching memory/skills/whatsapp_tone.md)
+// 3. Search for "sad cat" (matching decline emotion)
 const sadCatResults = findStickers('sad cat', 5);
 assert.ok(sadCatResults.length > 0, 'Should find matches for "sad cat"');
 assert.equal(sadCatResults[0].id, 'cat_sad_crying', 'Top result for "sad cat" must be cat_sad_crying');

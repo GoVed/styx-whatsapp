@@ -115,7 +115,7 @@ function calculateScore(sticker, rawQuery, tokens) {
 
 /**
  * Finds stickers matching the search query or options.
- * Matches criteria defined in memory/skills/whatsapp_tone.md (e.g. "sad cat", "thumbs up", "shrug", "celebrate").
+ * Matches emotional criteria (e.g. "sad cat", "thumbs up", "shrug", "celebrate").
  *
  * @param {string|object} options Query string or options object { query, search, category, limit }
  * @param {number} [defaultLimit=5]

@@ -1,7 +1,7 @@
 export const TOOL_DEFINITIONS = [
   {
     name: 'find_stickers',
-    description: 'Search the sticker catalog by emotional context, tags, or keywords (e.g. "sad cat", "thumbs up", "shrug", "celebrate"). Returns matching sticker IDs, descriptions, and scores according to memory/skills/whatsapp_tone.md.',
+    description: 'Search the sticker catalog by emotional context, tags, or keywords (e.g. "sad cat", "thumbs up", "shrug", "celebrate"). Returns matching sticker IDs, descriptions, and scores.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -92,7 +92,7 @@ export const TOOL_DEFINITIONS = [
   },
   {
     name: 'get_chat_history',
-    description: 'Retrieve message history handled by this bridge with optional filtering by contact/group name (e.g. "Computer Scientist"), keyword search, or direction.',
+    description: 'Retrieve message history handled by this bridge with optional filtering by contact/group name (e.g. "Engineering Team", "Alice"), keyword search, or direction.',
     inputSchema: {
       type: 'object',
       properties: {

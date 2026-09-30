@@ -60,13 +60,13 @@ describe('WhatsApp Chat Export Parser', () => {
 
   it('parses iOS bracketed export format and detects group subject changes', () => {
     const raw = `
-[15/06/2023, 09:12:00] Alice changed the subject to "Computer Scientist"
+[15/06/2023, 09:12:00] Alice changed the subject to "Engineering Team"
 [15/06/2023, 09:15:30 AM] Alice: Created this group for all researchers
 [15/06/2023, 09:16:12 AM] Bob: Thanks Alice!
 `;
 
     const res = parseWhatsAppChatExport(raw);
-    assert.strictEqual(res.chatName, 'Computer Scientist');
+    assert.strictEqual(res.chatName, 'Engineering Team');
     assert.strictEqual(res.messages.length, 2);
     assert.strictEqual(res.messages[0].senderName, 'Alice');
     assert.strictEqual(res.messages[1].senderName, 'Bob');
