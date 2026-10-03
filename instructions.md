@@ -39,8 +39,10 @@ The WhatsApp Connector is an isolated micro-daemon running alongside Styx Agent 
   - Never include robotic AI disclaimers or unsolicited corporate filler.
 
 ### `send_reaction` (Requires Approval, Risk: HIGH)
-- **Parameters**: `to: string`, `message_id: string`, `emoji: string`
-- **Purpose**: Adds an emoji reaction (e.g. "👍", "❤️", "😂", "🔥") to a specific message.
+- **Parameters**: `to: string` (or `chat`), `emoji: string` (or `reaction`), `message_id?: string`
+- **Purpose**: Adds or removes an emoji reaction (e.g. "👍", "❤️", "😂", "🔥", "🎉") on a WhatsApp message.
+- **Message Resolution**: If `message_id` is omitted or set to `"latest"`, it automatically reacts to the latest message in that chat.
+- **Reaction Removal**: Pass `emoji: ""` or `"none"` to remove an existing reaction from a message.
 
 ### `get_chat_history` (Autonomous, Risk: LOW)
 - **Parameters**: `chat?: string`, `limit?: number`

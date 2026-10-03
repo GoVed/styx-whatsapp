@@ -160,9 +160,10 @@ export class StyxRelay {
       ? (eventData.groupName || eventData.chatName || eventData.subject || null)
       : null;
 
+    const isReaction = eventData.type === 'reaction';
     const requestBody = {
       protocol: 'whatsapp',
-      event_type: 'new_message',
+      event_type: isReaction ? 'reaction' : 'new_message',
       source_id: sourceDesc,
       channel_id: chatIdentifier,
       session_id: existingSessionId,
@@ -185,7 +186,12 @@ export class StyxRelay {
         media_url: eventData.mediaUrl || null,
         media_type: eventData.mediaType || eventData.type || null,
         reply_to: eventData.replyTo || eventData.quotedMessage || null,
-        quoted_message: eventData.replyTo || eventData.quotedMessage || null
+        quoted_message: eventData.replyTo || eventData.quotedMessage || null,
+        reaction: isReaction ? (eventData.reaction || null) : null,
+        is_removed: isReaction ? Boolean(eventData.isRemoved) : false,
+        target_message_id: eventData.targetMessageId || null,
+        target_message_text: eventData.targetMessageText || null,
+        target_sender_name: eventData.targetSenderName || null
       }
     };
 

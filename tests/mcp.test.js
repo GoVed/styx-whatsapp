@@ -6,20 +6,12 @@ import { startHttpServer } from '../src/mcp/http.js';
 
 console.log('=== RUNNING COMPLETE STYX WHATSAPP TEST SUITE ===\n');
 
-// 1. Run stickers unit tests
 await import('./stickers.test.js');
-
-// 2. Run bridge unit tests
 await import('./bridge.test.js');
-
-// 3. Run relay unit tests
 await import('./relay.test.js');
-
-// 4. Run chat export unit tests
 await import('./chat-export.test.js');
-
-// 5. Run mentions unit tests
 await import('./mentions.test.js');
+await import('./reactions.test.js');
 
 console.log('Testing MCP 2024-11-05 Server Protocol...');
 
@@ -323,13 +315,8 @@ console.log('✓ POST /mcp tools/list JSON-RPC verified');
 const trigRes = await fetch(`${baseUrl}/trigger`, {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    from: '+15554443322',
-    message: 'Can we reschedule tomorrow?',
-    sender_name: 'David'
-  })
+  body: JSON.stringify({ from: '+15554443322', message: 'Can we reschedule tomorrow?', sender_name: 'David' })
 }).then(r => r.json());
-
 assert.equal(trigRes.success, true);
 assert.equal(trigRes.simulated_event.from, '+15554443322');
 assert.equal(trigRes.simulated_event.senderName, 'David');
@@ -339,12 +326,8 @@ console.log('✓ POST /trigger HTTP webhook simulation verified');
 const importHttpRes = await fetch(`${baseUrl}/import-export`, {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    content: sampleExport,
-    chat_name: 'Engineering Team'
-  })
+  body: JSON.stringify({ content: sampleExport, chat_name: 'Engineering Team' })
 }).then(r => r.json());
-
 assert.equal(importHttpRes.success, true);
 assert.equal(importHttpRes.chat_name, 'Engineering Team');
 console.log('✓ POST /import-export HTTP endpoint verified');

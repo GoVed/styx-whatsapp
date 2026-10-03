@@ -5,6 +5,7 @@ import logger from '../utils/logger.js';
 import { parseWhatsAppMessageContent } from './parser.js';
 import { resolveMentionsInText } from './mentions.js';
 import { downloadInboundMedia } from './media.js';
+import { applyReactionToHistory } from './history-ops.js';
 
 /**
  * Standardizes and processes a raw Baileys WebMessageInfo object.
@@ -34,17 +35,18 @@ export function processRawMessage(bridge, msg, isHistoric = false) {
     ? (bridge.userInfo?.name || 'You')
     : (msg.pushName || contact?.name || cleanParticipant);
 
-  const { text: rawContentText, type, quoted, mentions: rawMentions } = parseWhatsAppMessageContent(msg.message);
+  const { text: rawContentText, type, quoted, mentions: rawMentions, reaction } = parseWhatsAppMessageContent(msg.message);
 
-  if (!rawContentText || type === 'empty' || type === 'other') return null;
+  if (type === 'empty' || type === 'other') return null;
+  if (!rawContentText && type !== 'reaction') return null;
 
   if (quoted && quoted.participant) {
     const quotedContact = bridge.contacts.get(quoted.participant) || bridge.chats.get(quoted.participant);
     quoted.senderName = quotedContact?.name || quoted.participant.replace(/@.*$/, '');
   }
 
-  // Resolve @a_long_id mentions into human names (e.g. @155500011122233 -> @Alice)
-  const resolved = resolveMentionsInText(rawContentText, rawMentions, bridge);
+  // Resolve @a_long_id mentions into human names
+  const resolved = resolveMentionsInText(rawContentText || '', rawMentions, bridge);
   const text = resolved.text;
 
   const timestamp = typeof msg.messageTimestamp === 'number'
@@ -80,34 +82,45 @@ export function processRawMessage(bridge, msg, isHistoric = false) {
     rawMessage: msg.message
   };
 
+  // Handle incoming reaction message
+  if (type === 'reaction') {
+    const targetMessageId = reaction?.targetMessageId || msg.message?.reactionMessage?.key?.id;
+    const emoji = reaction?.emoji ?? msg.message?.reactionMessage?.text ?? '';
+    const isRemoved = Boolean(reaction?.isRemoved || !emoji);
+
+    const target = applyReactionToHistory({
+      history: bridge.history,
+      targetMessageId,
+      emoji,
+      senderName,
+      senderJid: participant,
+      timestamp,
+      fromMe
+    });
+    if (target) bridge.saveHistoryToDisk();
+
+    item.reaction = emoji;
+    item.isRemoved = isRemoved;
+    item.targetMessageId = targetMessageId;
+    item.targetMessageText = target?.text || target?.message || null;
+    item.targetSenderName = target?.senderName || null;
+    item.message = isRemoved
+      ? (target?.text ? `Removed reaction from "${target.text}"` : 'Removed reaction')
+      : (target?.text ? `Reacted ${emoji} to "${target.text}"` : `Reacted ${emoji}`);
+    item.text = item.message;
+  }
+
   if (!fromMe && senderName && senderName !== 'You' && senderName !== 'Styx Operator') {
     if (isGroup) {
-      bridge.recordChat({
-        jid: remoteJid,
-        lastMessageText: text,
-        lastMessageTime: timestamp
-      });
-      if (participant && participant !== remoteJid) {
-        bridge.recordContact({ id: participant, name: senderName });
-      }
+      bridge.recordChat({ jid: remoteJid, lastMessageText: item.message, lastMessageTime: timestamp });
+      if (participant && participant !== remoteJid) bridge.recordContact({ id: participant, name: senderName });
     } else {
-      bridge.recordChat({
-        jid: remoteJid,
-        name: senderName,
-        lastMessageText: text,
-        lastMessageTime: timestamp
-      });
-      if (participant && participant !== remoteJid) {
-        bridge.recordContact({ id: participant, name: senderName });
-      }
+      bridge.recordChat({ jid: remoteJid, name: senderName, lastMessageText: item.message, lastMessageTime: timestamp });
+      if (participant && participant !== remoteJid) bridge.recordContact({ id: participant, name: senderName });
       bridge.recordContact({ id: remoteJid, name: senderName });
     }
   } else if (isGroup) {
-    bridge.recordChat({
-      jid: remoteJid,
-      lastMessageText: text,
-      lastMessageTime: timestamp
-    });
+    bridge.recordChat({ jid: remoteJid, lastMessageText: item.message, lastMessageTime: timestamp });
   }
 
   if (type === 'image' || type === 'sticker' || type === 'video') {
@@ -121,9 +134,11 @@ export function processRawMessage(bridge, msg, isHistoric = false) {
   }
 
   const isExisting = Boolean(msg.key.id && bridge.history.some(h => h.messageId === msg.key.id));
-  bridge.recordHistory(item);
+  if (type !== 'reaction') {
+    bridge.recordHistory(item);
+  }
 
-  if (!isHistoric && !fromMe && text && !isExisting) {
+  if (!isHistoric && !fromMe && !isExisting) {
     if (type === 'image' || type === 'sticker' || type === 'video') {
       downloadInboundMedia(msg, type, config.mediaDir, bridge.sock)
         .then((media) => {
@@ -133,23 +148,95 @@ export function processRawMessage(bridge, msg, isHistoric = false) {
             item.mediaPath = media.localPath;
             bridge.saveHistoryToDisk();
           }
-          logger.info(
-            { from: item.from, senderName, isGroup, textSnippet: text.substring(0, 50), mediaUrl: item.mediaUrl },
-            'Inbound WhatsApp media message received and ready'
-          );
           bridge.emit('message', item);
         })
-        .catch((err) => {
-          logger.warn({ err: err.message }, 'Failed downloading media for inbound message');
-          bridge.emit('message', item);
-        });
+        .catch(() => bridge.emit('message', item));
+    } else if (type === 'reaction') {
+      logger.info({ from: item.from, senderName, emoji: item.reaction, targetMessageId: item.targetMessageId }, 'Inbound WhatsApp reaction received');
+      bridge.emit('reaction', item);
+      bridge.emit('message', item);
     } else {
-      logger.info(
-        { from: item.from, senderName, isGroup, textSnippet: text.substring(0, 50), mentionsCount: resolved.mentions.length },
-        'Inbound WhatsApp message received'
-      );
+      logger.info({ from: item.from, senderName, isGroup, textSnippet: text.substring(0, 50) }, 'Inbound WhatsApp message received');
       bridge.emit('message', item);
     }
+  }
+
+  return item;
+}
+
+/**
+ * Handles Baileys messages.reaction event update.
+ *
+ * @param {import('./live.js').LiveWhatsAppBridge} bridge
+ * @param {object} r Reaction update object from Baileys
+ */
+export function processReactionUpdate(bridge, r) {
+  if (!r || !r.key) return null;
+  const targetMessageId = r.key.id;
+  const remoteJid = r.key.remoteJid || r.reaction?.key?.remoteJid || '';
+  if (!remoteJid || remoteJid === 'status@broadcast' || remoteJid.endsWith('@newsletter')) return null;
+
+  const emoji = r.reaction?.text || '';
+  const isRemoved = !emoji;
+  const isGroup = remoteJid.endsWith('@g.us');
+  const participant = r.reaction?.key?.participant || r.key.participant || (r.reaction?.key?.fromMe ? (bridge.userInfo?.id || 'me') : remoteJid);
+  const fromMe = Boolean(r.reaction?.key?.fromMe || (bridge.userInfo?.id && participant === bridge.userInfo.id));
+
+  const isLid = participant.endsWith('@lid') || remoteJid.endsWith('@lid');
+  const cleanParticipant = participant.replace(/@.*$/, '').replace(/:\d+$/, '');
+  const cleanPhone = isLid ? participant : (cleanParticipant.startsWith('+') ? cleanParticipant : `+${cleanParticipant}`);
+
+  const contact = bridge.contacts.get(participant) || bridge.contacts.get(remoteJid);
+  const senderName = fromMe ? (bridge.userInfo?.name || 'You') : (contact?.name || cleanParticipant);
+
+  const timestamp = typeof r.reaction?.senderTimestampMs === 'number'
+    ? Math.floor(r.reaction.senderTimestampMs / 1000)
+    : Math.floor(Date.now() / 1000);
+
+  const target = applyReactionToHistory({
+    history: bridge.history,
+    targetMessageId,
+    emoji,
+    senderName,
+    senderJid: participant,
+    timestamp,
+    fromMe
+  });
+  if (target) bridge.saveHistoryToDisk();
+
+  const existingChat = bridge.chats.get(remoteJid);
+  const chatName = isGroup ? (existingChat?.name || '') : senderName;
+
+  const msgText = isRemoved
+    ? (target?.text ? `Removed reaction from "${target.text}"` : 'Removed reaction')
+    : (target?.text ? `Reacted ${emoji} to "${target.text}"` : `Reacted ${emoji}`);
+
+  const item = {
+    messageId: `react_${targetMessageId}_${timestamp}`,
+    direction: fromMe ? 'outbound' : 'inbound',
+    type: 'reaction',
+    reaction: emoji,
+    isRemoved,
+    targetMessageId,
+    targetMessageText: target?.text || target?.message || null,
+    targetSenderName: target?.senderName || null,
+    from: fromMe ? (bridge.userInfo?.phone || '+me') : cleanPhone,
+    senderJid: participant,
+    senderName,
+    chatName,
+    chatJid: remoteJid,
+    isGroup,
+    message: msgText,
+    text: msgText,
+    timestamp,
+    date: new Date(timestamp * 1000).toISOString(),
+    mode: 'live'
+  };
+
+  if (!fromMe) {
+    logger.info({ from: item.from, senderName, emoji, targetMessageId }, 'Inbound WhatsApp reaction event processed');
+    bridge.emit('reaction', item);
+    bridge.emit('message', item);
   }
 
   return item;

@@ -121,7 +121,20 @@ export function parseWhatsAppMessageContent(rawMessage, extractQuote = true) {
   } else if (content.stickerMessage) {
     result = { text: '[Sticker]', type: 'sticker', quoted, mentions };
   } else if (content.reactionMessage) {
-    result = { text: content.reactionMessage.text || '[Reaction]', type: 'reaction', quoted, mentions };
+    const emoji = content.reactionMessage.text || '';
+    const targetKey = content.reactionMessage.key || null;
+    result = {
+      text: emoji ? `Reacted ${emoji}` : 'Removed reaction',
+      type: 'reaction',
+      quoted,
+      mentions,
+      reaction: {
+        emoji,
+        targetMessageId: targetKey?.id || null,
+        targetKey,
+        isRemoved: !emoji
+      }
+    };
   } else if (content.buttonsResponseMessage?.selectedDisplayText) {
     result = { text: content.buttonsResponseMessage.selectedDisplayText, type: 'text', quoted, mentions };
   } else if (content.templateButtonReplyMessage?.selectedId) {

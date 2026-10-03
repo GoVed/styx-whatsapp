@@ -21,7 +21,7 @@ import logger from '../utils/logger.js';
 import { parseWhatsAppMessageContent } from './parser.js';
 import { registerSocketListeners } from './listeners.js';
 import { fetchEarlierMessagesForBridge } from './history-fetch.js';
-import { processRawMessage } from './message-processor.js';
+import { processRawMessage, processReactionUpdate } from './message-processor.js';
 
 export { parseWhatsAppMessageContent };
 
@@ -46,6 +46,16 @@ export class LiveWhatsAppBridge extends WhatsAppBridgeBase {
    */
   processRawMessage(msg, isHistoric = false) {
     return processRawMessage(this, msg, isHistoric);
+  }
+
+  /**
+   * Processes an incoming reaction update from Baileys messages.reaction event.
+   *
+   * @param {object} reactionUpdate
+   * @returns {object|null}
+   */
+  processReactionUpdate(reactionUpdate) {
+    return processReactionUpdate(this, reactionUpdate);
   }
 
   async connect() {

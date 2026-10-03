@@ -125,6 +125,18 @@ export function registerSocketListeners(bridge, sock, saveCreds) {
     }
   });
 
+  // Inbound & Outbound message reactions listener
+  sock.ev.on('messages.reaction', async (reactions) => {
+    if (Array.isArray(reactions)) {
+      for (const r of reactions) {
+        if (typeof bridge.processReactionUpdate === 'function') {
+          bridge.processReactionUpdate(r);
+        }
+      }
+    }
+  });
+
+
   // History sync package listener
   sock.ev.on('messaging-history.set', ({ chats, contacts, messages, isLatest, syncType }) => {
     logger.info(

@@ -111,24 +111,24 @@ export const TOOL_DEFINITIONS = [
   },
   {
     name: 'send_reaction',
-    description: 'Send an emoji reaction to a specific WhatsApp message.',
+    description: 'Send or remove an emoji reaction on a WhatsApp message. If message_id is omitted or "latest", reacts to the latest message in the chat. Pass "" or "none" to remove a reaction.',
     inputSchema: {
       type: 'object',
       properties: {
         to: {
           type: 'string',
-          description: 'Recipient phone number or chat JID'
+          description: 'Recipient phone number, contact name, or chat JID (alias: chat)'
         },
         message_id: {
           type: 'string',
-          description: 'WhatsApp ID of the message to react to'
+          description: 'WhatsApp ID of the message to react to (optional; defaults to latest message if omitted)'
         },
         emoji: {
           type: 'string',
-          description: 'Emoji character to react with (e.g. "👍", "❤️", "😿", "🔥", "🎉")'
+          description: 'Emoji character to react with (e.g. "👍", "❤️", "🔥", "🎉", or "" / "none" to remove a reaction)'
         }
       },
-      required: ['to', 'message_id', 'emoji']
+      required: ['to', 'emoji']
     }
   },
   {

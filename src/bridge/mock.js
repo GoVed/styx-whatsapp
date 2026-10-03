@@ -1,31 +1,22 @@
 import WhatsAppBridgeBase from './base.js';
 import { getSticker } from '../stickers/search.js';
 import { resolveMentionsInText } from './mentions.js';
+import { applyReactionToHistory } from './history-ops.js';
 import logger from '../utils/logger.js';
 
 export class MockWhatsAppBridge extends WhatsAppBridgeBase {
   constructor() {
     super();
     this.mode = 'mock';
-    this.userInfo = {
-      id: '15550192834@s.whatsapp.net',
-      phone: '+15550192834',
-      name: 'Styx Operator (Offline Mock Simulator)'
-    };
+    this.userInfo = { id: '15550192834@s.whatsapp.net', phone: '+15550192834', name: 'Styx Operator (Offline Mock Simulator)' };
   }
 
   async connect() {
     this.status = 'connecting';
     this.emit('connection', { state: 'connecting', mode: 'mock' });
     logger.info('Initializing Mock WhatsApp Bridge (Offline Simulator)...');
-
-    // Simulate instant handshake
     this.status = 'connected';
-    this.emit('connection', {
-      state: 'connected',
-      mode: 'mock',
-      user: this.userInfo
-    });
+    this.emit('connection', { state: 'connected', mode: 'mock', user: this.userInfo });
     logger.info({ user: this.userInfo }, 'Mock WhatsApp Bridge connected successfully');
     return this.userInfo;
   }
@@ -37,177 +28,108 @@ export class MockWhatsAppBridge extends WhatsAppBridgeBase {
   }
 
   async sendMessage(to, text, options = {}) {
-    if (!text || typeof text !== 'string') {
-      throw new Error('Message text is required');
-    }
+    if (!text || typeof text !== 'string') throw new Error('Message text is required');
     const jid = this.formatJid(to);
     const messageId = `MOCK_OUT_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const timestamp = Math.floor(Date.now() / 1000);
     const mentions = Array.isArray(options?.mentions) ? options.mentions : [];
 
-    const record = {
-      direction: 'outbound',
-      type: 'text',
-      messageId,
-      to: jid,
-      text,
-      mentions,
-      timestamp,
-      status: 'delivered'
-    };
-
+    const record = { direction: 'outbound', type: 'text', messageId, to: jid, text, mentions, timestamp, status: 'delivered' };
     this.recordHistory(record);
     logger.info({ to: jid, messageId, text }, '[MOCK WHATSAPP] Outbound message sent');
-
-    return {
-      success: true,
-      messageId,
-      to: jid,
-      text,
-      timestamp,
-      mode: 'mock'
-    };
+    return { success: true, messageId, to: jid, text, timestamp, mode: 'mock' };
   }
 
   async sendSticker(to, stickerIdOrBuffer) {
     const jid = this.formatJid(to);
-    let stickerId = 'custom';
-    let stickerName = 'Custom Sticker';
-
+    let stickerId = 'custom', stickerName = 'Custom Sticker';
     if (typeof stickerIdOrBuffer === 'string') {
       stickerId = stickerIdOrBuffer;
       const found = getSticker(stickerId);
-      if (found) {
-        stickerName = found.name;
-      }
+      if (found) stickerName = found.name;
     }
-
     const messageId = `MOCK_STK_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const timestamp = Math.floor(Date.now() / 1000);
-
-    const record = {
-      direction: 'outbound',
-      type: 'sticker',
-      messageId,
-      to: jid,
-      stickerId,
-      stickerName,
-      timestamp,
-      status: 'delivered'
-    };
-
+    const record = { direction: 'outbound', type: 'sticker', messageId, to: jid, stickerId, stickerName, timestamp, status: 'delivered' };
     this.recordHistory(record);
     logger.info({ to: jid, stickerId, stickerName, messageId }, '[MOCK WHATSAPP] Outbound sticker sent');
-
-    return {
-      success: true,
-      messageId,
-      to: jid,
-      stickerId,
-      stickerName,
-      timestamp,
-      mode: 'mock'
-    };
+    return { success: true, messageId, to: jid, stickerId, stickerName, timestamp, mode: 'mock' };
   }
 
   async sendImage(to, imageSource, caption = '') {
-    if (!imageSource) {
-      throw new Error('Image source (URL, file path, base64, or Buffer) is required');
-    }
+    if (!imageSource) throw new Error('Image source (URL, file path, base64, or Buffer) is required');
     const jid = this.formatJid(to);
     const messageId = `MOCK_IMG_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const timestamp = Math.floor(Date.now() / 1000);
-
     const record = {
-      direction: 'outbound',
-      type: 'image',
-      messageId,
-      to: jid,
-      caption: caption || '',
-      text: caption || '[Image]',
-      message: caption || '[Image]',
-      mediaSource: typeof imageSource === 'string' ? imageSource : 'buffer',
-      timestamp,
-      status: 'delivered'
+      direction: 'outbound', type: 'image', messageId, to: jid, caption: caption || '',
+      text: caption || '[Image]', message: caption || '[Image]',
+      mediaSource: typeof imageSource === 'string' ? imageSource : 'buffer', timestamp, status: 'delivered'
     };
-
     this.recordHistory(record);
     logger.info({ to: jid, messageId, caption }, '[MOCK WHATSAPP] Outbound image sent');
-
-    return {
-      success: true,
-      messageId,
-      to: jid,
-      caption: caption || '',
-      timestamp,
-      mode: 'mock'
-    };
+    return { success: true, messageId, to: jid, caption: caption || '', timestamp, mode: 'mock' };
   }
 
   async sendGif(to, gifSource, caption = '') {
-    if (!gifSource) {
-      throw new Error('GIF source (URL, file path, base64, or Buffer) is required');
-    }
+    if (!gifSource) throw new Error('GIF source (URL, file path, base64, or Buffer) is required');
     const jid = this.formatJid(to);
     const messageId = `MOCK_GIF_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const timestamp = Math.floor(Date.now() / 1000);
-
     const record = {
-      direction: 'outbound',
-      type: 'gif',
-      messageId,
-      to: jid,
-      caption: caption || '',
-      text: caption || '[GIF]',
-      message: caption || '[GIF]',
-      mediaSource: typeof gifSource === 'string' ? gifSource : 'buffer',
-      timestamp,
-      status: 'delivered'
+      direction: 'outbound', type: 'gif', messageId, to: jid, caption: caption || '',
+      text: caption || '[GIF]', message: caption || '[GIF]',
+      mediaSource: typeof gifSource === 'string' ? gifSource : 'buffer', timestamp, status: 'delivered'
     };
-
     this.recordHistory(record);
     logger.info({ to: jid, messageId, caption }, '[MOCK WHATSAPP] Outbound GIF sent');
-
-    return {
-      success: true,
-      messageId,
-      to: jid,
-      caption: caption || '',
-      timestamp,
-      mode: 'mock'
-    };
+    return { success: true, messageId, to: jid, caption: caption || '', timestamp, mode: 'mock' };
   }
 
   async sendReaction(to, messageId, emoji) {
-    if (!messageId) {
-      throw new Error('Target messageId is required for reaction');
-    }
-    if (!emoji) {
-      throw new Error('Reaction emoji is required');
-    }
     const jid = this.formatJid(to);
+    let targetId = messageId;
+    let targetMsg = null;
+
+    if (!targetId || targetId === 'latest' || targetId === 'last') {
+      targetMsg = this.history.slice().reverse().find(h =>
+        (h.chatJid === jid || h.to === jid || h.from === jid || h.senderJid === jid) &&
+        h.messageId && !h.messageId.startsWith('react_') && h.type !== 'reaction'
+      );
+      if (!targetMsg) throw new Error(`No messages found in chat "${to}" to react to`);
+      targetId = targetMsg.messageId;
+    } else {
+      targetMsg = this.history.find(h => h.messageId === targetId) || null;
+    }
+
+    const cleanEmoji = typeof emoji === 'string' ? emoji.trim() : '';
+    const isRemove = !cleanEmoji || cleanEmoji === 'none' || cleanEmoji === 'remove';
+    const reactionText = isRemove ? '' : cleanEmoji;
     const timestamp = Math.floor(Date.now() / 1000);
+
+    applyReactionToHistory({
+      history: this.history,
+      targetMessageId: targetId,
+      emoji: reactionText,
+      senderName: 'You',
+      senderJid: this.userInfo?.id || null,
+      fromMe: true,
+      timestamp
+    });
 
     const record = {
       direction: 'outbound',
       type: 'reaction',
       to: jid,
-      targetMessageId: messageId,
-      emoji,
+      targetMessageId: targetId,
+      emoji: reactionText,
+      isRemoved: isRemove,
       timestamp
     };
-
     this.recordHistory(record);
-    logger.info({ to: jid, messageId, emoji }, '[MOCK WHATSAPP] Reaction dispatched');
+    logger.info({ to: jid, messageId: targetId, emoji: reactionText, isRemove }, '[MOCK WHATSAPP] Reaction dispatched');
 
-    return {
-      success: true,
-      to: jid,
-      messageId,
-      emoji,
-      timestamp,
-      mode: 'mock'
-    };
+    return { success: true, to: jid, messageId: targetId, emoji: reactionText, isRemoved: isRemove, timestamp, mode: 'mock' };
   }
 
   async fetchEarlierMessages(to, count = 50) {
@@ -280,6 +202,79 @@ export class MockWhatsAppBridge extends WhatsAppBridgeBase {
     logger.info({ from: inboundEvent.from, senderName, message }, '[MOCK WHATSAPP] Simulating inbound message');
     this.emit('message', inboundEvent);
 
+    return inboundEvent;
+  }
+
+  simulateInboundReaction({
+    from = '+1234567890',
+    targetMessageId = null,
+    emoji = '❤️',
+    senderName = 'Alice',
+    isGroup = false,
+    groupId = null,
+    chatName = null
+  } = {}) {
+    const senderJid = this.formatJid(from);
+    const chatJid = isGroup && groupId ? this.formatJid(groupId) : senderJid;
+    let targetId = targetMessageId;
+    let target = null;
+
+    if (!targetId || targetId === 'latest' || targetId === 'last') {
+      target = this.history.slice().reverse().find(h =>
+        (h.chatJid === chatJid || h.to === chatJid || h.from === chatJid) &&
+        h.messageId && !h.messageId.startsWith('react_') && h.type !== 'reaction'
+      );
+      targetId = target?.messageId || null;
+    } else {
+      target = this.history.find(h => h.messageId === targetId) || null;
+    }
+
+    const cleanEmoji = typeof emoji === 'string' ? emoji.trim() : '';
+    const isRemoved = !cleanEmoji || cleanEmoji === 'none' || cleanEmoji === 'remove';
+    const timestamp = Math.floor(Date.now() / 1000);
+
+    if (targetId) {
+      applyReactionToHistory({
+        history: this.history,
+        targetMessageId: targetId,
+        emoji: cleanEmoji,
+        senderName,
+        senderJid,
+        timestamp,
+        fromMe: false
+      });
+    }
+
+    const targetText = target?.text || target?.message || null;
+    const msgText = isRemoved
+      ? (targetText ? `Removed reaction from "${targetText}"` : 'Removed reaction')
+      : (targetText ? `Reacted ${cleanEmoji} to "${targetText}"` : `Reacted ${cleanEmoji}`);
+
+    const inboundEvent = {
+      messageId: `react_${targetId || Date.now()}_${timestamp}`,
+      direction: 'inbound',
+      type: 'reaction',
+      reaction: cleanEmoji,
+      isRemoved,
+      targetMessageId: targetId,
+      targetMessageText: targetText,
+      targetSenderName: target?.senderName || null,
+      from: from.replace(/@.*$/, ''),
+      senderJid,
+      senderName,
+      chatName: chatName || (isGroup ? 'Mock Group' : senderName),
+      chatJid,
+      isGroup: Boolean(isGroup),
+      message: msgText,
+      text: msgText,
+      timestamp,
+      date: new Date(timestamp * 1000).toISOString(),
+      mode: 'mock'
+    };
+
+    logger.info({ from: inboundEvent.from, senderName, emoji: cleanEmoji, targetMessageId: targetId }, '[MOCK WHATSAPP] Simulating inbound reaction');
+    this.emit('reaction', inboundEvent);
+    this.emit('message', inboundEvent);
     return inboundEvent;
   }
 

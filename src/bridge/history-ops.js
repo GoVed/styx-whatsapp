@@ -142,3 +142,57 @@ export function recordBatchItems({ items, history, chats, maxHistory }) {
 
   return addedCount;
 }
+
+/**
+ * Applies an incoming or outgoing reaction to a target message in history.
+ * If emoji is non-empty, updates or adds the sender's reaction.
+ * If emoji is empty/falsy, removes the sender's reaction.
+ *
+ * @param {object} params
+ * @param {Array<object>} params.history
+ * @param {string} params.targetMessageId
+ * @param {string} params.emoji
+ * @param {string} [params.senderName]
+ * @param {string} [params.senderJid]
+ * @param {number} [params.timestamp]
+ * @param {boolean} [params.fromMe=false]
+ * @returns {object|null} The modified target message or null if not found
+ */
+export function applyReactionToHistory({
+  history,
+  targetMessageId,
+  emoji,
+  senderName,
+  senderJid,
+  timestamp,
+  fromMe = false
+}) {
+  if (!targetMessageId || !Array.isArray(history)) return null;
+  const target = history.find((h) => h.messageId === targetMessageId);
+  if (!target) return null;
+
+  if (!Array.isArray(target.reactions)) {
+    target.reactions = [];
+  }
+
+  target.reactions = target.reactions.filter((r) => {
+    if (fromMe && r.fromMe) return false;
+    if (senderJid && r.senderJid === senderJid) return false;
+    if (senderName && !senderJid && r.senderName === senderName) return false;
+    return true;
+  });
+
+  const cleanEmoji = typeof emoji === 'string' ? emoji.trim() : '';
+  if (cleanEmoji && cleanEmoji !== 'none' && cleanEmoji !== 'remove') {
+    target.reactions.push({
+      emoji: cleanEmoji,
+      senderName: senderName || (fromMe ? 'You' : 'Unknown'),
+      senderJid: senderJid || null,
+      fromMe: Boolean(fromMe),
+      timestamp: timestamp || Math.floor(Date.now() / 1000)
+    });
+  }
+
+  return target;
+}
+

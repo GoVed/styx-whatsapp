@@ -10,6 +10,7 @@ import {
   recordOutboundMedia
 } from './media.js';
 import { resolveOutboundMentions } from './mentions.js';
+import { applyReactionToHistory } from './history-ops.js';
 
 /**
  * Dispatches an outbound plain text WhatsApp message via Baileys socket.
@@ -178,45 +179,56 @@ export async function sendLiveReaction(bridge, to, messageId, emoji) {
   if (!bridge.sock || bridge.status !== 'connected') {
     throw new Error(`WhatsApp is not connected (current state: ${bridge.status})`);
   }
-  if (!messageId) {
-    throw new Error('Target messageId is required for reaction');
-  }
-  if (!emoji) {
-    throw new Error('Reaction emoji is required');
-  }
-
   const jid = bridge.formatJid(to);
-  await bridge.sock.sendMessage(jid, {
-    react: {
-      text: emoji,
-      key: {
-        remoteJid: jid,
-        id: messageId
-      }
-    }
-  });
+  let targetId = messageId;
+  let targetMsg = null;
 
+  if (!targetId || targetId === 'latest' || targetId === 'last') {
+    targetMsg = bridge.history.slice().reverse().find(h =>
+      (h.chatJid === jid || h.to === jid || h.from === jid || h.senderJid === jid) &&
+      h.messageId && !h.messageId.startsWith('react_') && h.type !== 'reaction'
+    );
+    if (!targetMsg) throw new Error(`No messages found in chat "${to}" to react to`);
+    targetId = targetMsg.messageId;
+  } else {
+    targetMsg = bridge.history.find(h => h.messageId === targetId) || null;
+  }
+
+  const cleanEmoji = typeof emoji === 'string' ? emoji.trim() : '';
+  const isRemove = !cleanEmoji || cleanEmoji === 'none' || cleanEmoji === 'remove';
+  const reactionText = isRemove ? '' : cleanEmoji;
+  const key = { remoteJid: jid, id: targetId };
+  if (jid.endsWith('@g.us') && targetMsg) {
+    const participant = targetMsg.senderJid || targetMsg.participant || (targetMsg.fromMe ? bridge.userInfo?.id : null);
+    if (participant) key.participant = participant;
+  }
+
+  await bridge.sock.sendMessage(jid, { react: { text: reactionText, key } });
   const timestamp = Math.floor(Date.now() / 1000);
+  applyReactionToHistory({
+    history: bridge.history,
+    targetMessageId: targetId,
+    emoji: reactionText,
+    senderName: 'You',
+    senderJid: bridge.userInfo?.id || null,
+    fromMe: true,
+    timestamp
+  });
+  if (bridge.saveHistoryToDisk) bridge.saveHistoryToDisk();
+
   const record = {
     direction: 'outbound',
     type: 'reaction',
     to: jid,
-    targetMessageId: messageId,
-    emoji,
+    targetMessageId: targetId,
+    emoji: reactionText,
+    isRemoved: isRemove,
     timestamp
   };
-
   bridge.recordHistory(record);
-  logger.info({ to: jid, messageId, emoji }, 'Outbound WhatsApp reaction dispatched');
+  logger.info({ to: jid, targetId, emoji: reactionText, isRemove }, 'Outbound WhatsApp reaction dispatched');
 
-  return {
-    success: true,
-    to: jid,
-    messageId,
-    emoji,
-    timestamp,
-    mode: 'live'
-  };
+  return { success: true, to: jid, messageId: targetId, emoji: reactionText, isRemoved: isRemove, timestamp, mode: 'live' };
 }
 
 /**

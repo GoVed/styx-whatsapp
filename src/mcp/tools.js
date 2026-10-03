@@ -161,19 +161,18 @@ export async function executeTool(rawToolName, args = {}, bridge) {
       }
 
       case 'send_reaction': {
-        const { to, message_id, messageId, emoji } = args;
-        const targetMsgId = message_id || messageId;
-        if (!to) {
-          throw new Error('Missing required argument: "to"');
+        const { to, chat, message_id, messageId, emoji, reaction } = args;
+        const targetTo = to || chat;
+        const targetMsgId = message_id || messageId || 'latest';
+        const targetEmoji = emoji !== undefined ? emoji : reaction;
+        if (!targetTo) {
+          throw new Error('Missing required argument: "to" (or "chat")');
         }
-        if (!targetMsgId) {
-          throw new Error('Missing required argument: "message_id"');
-        }
-        if (!emoji) {
-          throw new Error('Missing required argument: "emoji"');
+        if (targetEmoji === undefined || targetEmoji === null) {
+          throw new Error('Missing required argument: "emoji" (or "reaction")');
         }
 
-        const res = await bridge.sendReaction(to, targetMsgId, emoji);
+        const res = await bridge.sendReaction(targetTo, targetMsgId, targetEmoji);
         return {
           content: [
             {
