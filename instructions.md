@@ -22,6 +22,14 @@ The WhatsApp Connector is an isolated micro-daemon running alongside Styx Agent 
 - **Purpose**: Sends a rich WebP sticker to a contact or group.
 - **Recipient (`to`)**: Accepts phone numbers (`+1234567890`), JIDs (`...@s.whatsapp.net` or `...@lid`), group JIDs (`...@g.us`), or contact names.
 
+### `send_image` (Requires Approval, Risk: HIGH)
+- **Parameters**: `to: string`, `image: string` (URL or file path), `caption?: string`
+- **Purpose**: Sends a photo or image (JPEG, PNG, WebP) with an optional caption to a contact or group. Accepts HTTP/HTTPS image URLs or local files.
+
+### `send_gif` (Requires Approval, Risk: HIGH)
+- **Parameters**: `to: string`, `gif: string` (URL or file path), `caption?: string`
+- **Purpose**: Sends an animated looping GIF or MP4 video clip with an optional caption to a contact or group. Accepts GIF/video URLs or local files.
+
 ### `send_message` (Requires Approval, Risk: HIGH)
 - **Parameters**: `to: string`, `message: string`
 - **Purpose**: Sends a plain text message to an individual or group.

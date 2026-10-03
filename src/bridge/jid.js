@@ -18,13 +18,25 @@ export function formatRecipientJid(to, contacts, chats, history) {
   }
   const trimmed = to.trim();
 
-  // 1. If already ending with @lid, @g.us, @newsletter, @broadcast, keep it
+  // 1. If already ending with @lid, @newsletter, @broadcast, keep it
   if (
     trimmed.endsWith('@lid') ||
-    trimmed.endsWith('@g.us') ||
     trimmed.endsWith('@newsletter') ||
     trimmed.endsWith('@broadcast')
   ) {
+    return trimmed;
+  }
+
+  // Group JIDs: check exact match or resolve partial group identifier
+  if (trimmed.endsWith('@g.us')) {
+    if (chats.has(trimmed)) return trimmed;
+    const cleanGroupNum = trimmed.replace(/@.*$/, '');
+    for (const chat of chats.values()) {
+      if (chat.jid?.endsWith('@g.us') && chat.jid.includes(cleanGroupNum)) {
+        logger.info({ to, matchedJid: chat.jid, name: chat.name }, 'Resolved partial group JID to full WhatsApp group JID');
+        return chat.jid;
+      }
+    }
     return trimmed;
   }
 
@@ -92,7 +104,7 @@ export function formatRecipientJid(to, contacts, chats, history) {
     }
   }
 
-  // WhatsApp companion LIDs are 15-digit internal identifiers (e.g. 255500011122233, 211273987932324)
+  // WhatsApp companion LIDs are 15-digit internal identifiers (e.g. 155500011122233)
   if (/^\d{15}$/.test(cleanId)) {
     const sessionFile = path.join(config.authDir, `session-${cleanId}.0.json`);
     if (fs.existsSync(sessionFile)) {

@@ -22,6 +22,18 @@
       "policy": "REQUIRE_APPROVAL"
     },
     {
+      "name": "send_image",
+      "description": "Send a photo or image (JPG, PNG, WebP) with optional caption to a WhatsApp contact or group chat",
+      "risk_level": "HIGH",
+      "policy": "REQUIRE_APPROVAL"
+    },
+    {
+      "name": "send_gif",
+      "description": "Send an animated GIF or looping video clip with optional caption to a WhatsApp contact or group chat",
+      "risk_level": "HIGH",
+      "policy": "REQUIRE_APPROVAL"
+    },
+    {
       "name": "send_message",
       "description": "Send a plain text message to a WhatsApp contact or group chat",
       "risk_level": "HIGH",

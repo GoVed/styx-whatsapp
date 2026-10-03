@@ -3,6 +3,8 @@ import path from 'node:path';
 import config from '../../config.js';
 import logger from '../../utils/logger.js';
 
+import { resolveMentionsInText } from '../../bridge/mentions.js';
+
 /**
  * Handles the get_chat_history MCP tool call.
  * Formats messages and includes media_url for stickers/images.
@@ -49,6 +51,19 @@ export async function handleGetChatHistory(args, bridge) {
       }
     }
 
+    const rawText = h.rawText || h.message || h.text || '';
+    let text = h.message || h.text || '';
+    let mentions = h.mentions;
+
+    // Dynamically resolve mentions for historical records if not already resolved or if text has @digits
+    if ((!mentions || mentions.length === 0 || text.includes('@')) && rawText) {
+      const resolved = resolveMentionsInText(rawText, h.mentions || [], bridge);
+      text = resolved.text;
+      if (resolved.mentions && resolved.mentions.length > 0) {
+        mentions = resolved.mentions;
+      }
+    }
+
     return {
       id: h.messageId,
       direction: h.direction,
@@ -56,7 +71,9 @@ export async function handleGetChatHistory(args, bridge) {
       sender: h.senderName,
       chat_name: h.chatName || bridge.chats?.get(h.chatJid)?.name || undefined,
       chat_jid: h.chatJid || h.to || h.senderJid || '',
-      text: h.message || h.text || '',
+      text,
+      raw_text: rawText !== text ? rawText : undefined,
+      mentions: mentions && mentions.length > 0 ? mentions : undefined,
       type: h.type || 'text',
       media_url: mediaUrl || undefined,
       reply_to: h.replyTo || h.quotedMessage || undefined,

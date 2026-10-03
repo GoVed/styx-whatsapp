@@ -2,6 +2,14 @@ import fs from 'node:fs';
 import { getSticker, getStickerBuffer } from '../stickers/index.js';
 import sharp from 'sharp';
 import logger from '../utils/logger.js';
+import {
+  resolveMediaSource,
+  detectMediaType,
+  convertGifToMp4,
+  saveMediaToCache,
+  recordOutboundMedia
+} from './media.js';
+import { resolveOutboundMentions } from './mentions.js';
 
 /**
  * Dispatches an outbound plain text WhatsApp message via Baileys socket.
@@ -10,7 +18,7 @@ import logger from '../utils/logger.js';
  * @param {string} text
  * @returns {Promise<object>}
  */
-export async function sendLiveMessage(bridge, to, text) {
+export async function sendLiveMessage(bridge, to, text, options = {}) {
   if (!bridge.sock || bridge.status !== 'connected') {
     throw new Error(`WhatsApp is not connected (current state: ${bridge.status})`);
   }
@@ -19,7 +27,12 @@ export async function sendLiveMessage(bridge, to, text) {
   }
 
   const jid = bridge.formatJid(to);
-  const sent = await bridge.sock.sendMessage(jid, { text });
+  let mentions = Array.isArray(options?.mentions) ? options.mentions : [];
+  if (mentions.length === 0 && (jid.endsWith('@g.us') || text.includes('@'))) {
+    mentions = resolveOutboundMentions(text, bridge).mentions;
+  }
+  const sendPayload = mentions.length > 0 ? { text, mentions } : { text };
+  const sent = await bridge.sock.sendMessage(jid, sendPayload);
   const messageId = sent?.key?.id || `LIVE_OUT_${Date.now()}`;
   const timestamp = Math.floor(Date.now() / 1000);
 
@@ -36,6 +49,7 @@ export async function sendLiveMessage(bridge, to, text) {
       : (!to.includes('@') && !/^\+?\d+$/.test(to) ? to : (targetContact?.name || jid)),
     text,
     message: text,
+    mentions,
     timestamp,
     status: 'sent'
   };
@@ -200,6 +214,111 @@ export async function sendLiveReaction(bridge, to, messageId, emoji) {
     to: jid,
     messageId,
     emoji,
+    timestamp,
+    mode: 'live'
+  };
+}
+
+/**
+ * Dispatches an outbound image (JPEG, PNG, WebP) via Baileys socket.
+ * @param {import('./live.js').LiveWhatsAppBridge} bridge
+ * @param {string} to
+ * @param {string|Buffer} imageSource File path, HTTP(S) URL, base64, or Buffer
+ * @param {string} [caption]
+ * @returns {Promise<object>}
+ */
+export async function sendLiveImage(bridge, to, imageSource, caption = '') {
+  if (!bridge.sock || bridge.status !== 'connected') {
+    throw new Error(`WhatsApp is not connected (current state: ${bridge.status})`);
+  }
+  if (!imageSource) {
+    throw new Error('Image source (URL, file path, base64, or Buffer) is required');
+  }
+
+  const jid = bridge.formatJid(to);
+  const { buffer, hint } = await resolveMediaSource(imageSource);
+  const detected = detectMediaType(buffer, hint);
+
+  // If source is an animated GIF, forward to sendLiveGif for looping video playback
+  if (detected.type === 'gif') {
+    return sendLiveGif(bridge, to, buffer, caption);
+  }
+
+  const sent = await bridge.sock.sendMessage(jid, {
+    image: buffer,
+    caption: caption || undefined,
+    mimetype: detected.mimetype
+  });
+
+  const messageId = sent?.key?.id || `LIVE_IMG_${Date.now()}`;
+  const timestamp = Math.floor(Date.now() / 1000);
+  const { mediaPath, mediaUrl } = saveMediaToCache(buffer, messageId, detected.ext);
+
+  recordOutboundMedia(bridge, {
+    jid, to, type: 'image', messageId, caption, mediaUrl, mediaPath, timestamp
+  });
+  logger.info({ to: jid, messageId, caption }, 'Outbound WhatsApp image dispatched');
+
+  return {
+    success: true,
+    messageId,
+    to: jid,
+    caption: caption || '',
+    mediaUrl,
+    timestamp,
+    mode: 'live'
+  };
+}
+
+/**
+ * Dispatches an outbound animated GIF or looping MP4 clip via Baileys socket.
+ * @param {import('./live.js').LiveWhatsAppBridge} bridge
+ * @param {string} to
+ * @param {string|Buffer} gifSource File path, HTTP(S) URL, base64, or Buffer
+ * @param {string} [caption]
+ * @returns {Promise<object>}
+ */
+export async function sendLiveGif(bridge, to, gifSource, caption = '') {
+  if (!bridge.sock || bridge.status !== 'connected') {
+    throw new Error(`WhatsApp is not connected (current state: ${bridge.status})`);
+  }
+  if (!gifSource) {
+    throw new Error('GIF source (URL, file path, base64, or Buffer) is required');
+  }
+
+  const jid = bridge.formatJid(to);
+  const { buffer, hint } = await resolveMediaSource(gifSource);
+  const detected = detectMediaType(buffer, hint);
+
+  let videoBuffer;
+  if (detected.type === 'video' || detected.ext === 'mp4') {
+    videoBuffer = buffer;
+  } else {
+    videoBuffer = await convertGifToMp4(buffer);
+  }
+
+  const sent = await bridge.sock.sendMessage(jid, {
+    video: videoBuffer,
+    gifPlayback: true,
+    caption: caption || undefined,
+    mimetype: 'video/mp4'
+  });
+
+  const messageId = sent?.key?.id || `LIVE_GIF_${Date.now()}`;
+  const timestamp = Math.floor(Date.now() / 1000);
+  const { mediaPath, mediaUrl } = saveMediaToCache(videoBuffer, messageId, 'mp4');
+
+  recordOutboundMedia(bridge, {
+    jid, to, type: 'gif', messageId, caption, mediaUrl, mediaPath, timestamp
+  });
+  logger.info({ to: jid, messageId, caption }, 'Outbound WhatsApp GIF dispatched');
+
+  return {
+    success: true,
+    messageId,
+    to: jid,
+    caption: caption || '',
+    mediaUrl,
     timestamp,
     mode: 'live'
   };

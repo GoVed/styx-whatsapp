@@ -22,6 +22,8 @@ export function normalizeToolName(toolName) {
     if (stripped === 'fetch_older' || stripped === 'fetch_older_messages' || stripped === 'sync_history') return 'fetch_older_messages';
     if (stripped === 'simulate_inbound') return 'simulate_inbound_message';
     if (stripped === 'import_export' || stripped === 'import_chat' || stripped === 'import_history') return 'import_chat_export';
+    if (stripped === 'image' || stripped === 'photo' || stripped === 'send_photo') return 'send_image';
+    if (stripped === 'gif' || stripped === 'video') return 'send_gif';
     return stripped;
   }
   return cleaned;
@@ -88,8 +90,56 @@ export async function executeTool(rawToolName, args = {}, bridge) {
         };
       }
 
+      case 'send_image': {
+        const { to, image, image_url, imageUrl, url, file_path, filePath, path: p, caption, text, message } = args;
+        const targetImage = image || image_url || imageUrl || url || file_path || filePath || p;
+        const targetCaption = caption || text || message || '';
+
+        if (!to) {
+          throw new Error('Missing required argument: "to"');
+        }
+        if (!targetImage) {
+          throw new Error('Missing required argument: "image" (URL or file path)');
+        }
+
+        const res = await bridge.sendImage(to, targetImage, targetCaption);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(res, null, 2)
+            }
+          ],
+          isError: false
+        };
+      }
+
+      case 'send_gif': {
+        const { to, gif, gif_url, gifUrl, url, file_path, filePath, path: p, caption, text, message } = args;
+        const targetGif = gif || gif_url || gifUrl || url || file_path || filePath || p;
+        const targetCaption = caption || text || message || '';
+
+        if (!to) {
+          throw new Error('Missing required argument: "to"');
+        }
+        if (!targetGif) {
+          throw new Error('Missing required argument: "gif" (URL or file path)');
+        }
+
+        const res = await bridge.sendGif(to, targetGif, targetCaption);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(res, null, 2)
+            }
+          ],
+          isError: false
+        };
+      }
+
       case 'send_message': {
-        const { to, message, text } = args;
+        const { to, message, text, mentions } = args;
         const msgContent = message || text;
         if (!to) {
           throw new Error('Missing required argument: "to"');
@@ -98,7 +148,7 @@ export async function executeTool(rawToolName, args = {}, bridge) {
           throw new Error('Missing required argument: "message"');
         }
 
-        const res = await bridge.sendMessage(to, msgContent);
+        const res = await bridge.sendMessage(to, msgContent, { mentions });
         return {
           content: [
             {

@@ -42,6 +42,20 @@ assert.equal(stkRes.stickerId, 'cat_sad_crying');
 assert.equal(stkRes.stickerName, 'Sad Crying Cat');
 console.log('✓ Outbound sticker verified');
 
+// 5b. Outbound Image
+const imgRes = await bridge.sendImage('+19876543210', 'https://example.com/photo.png', 'Here is the diagram');
+assert.equal(imgRes.success, true);
+assert.ok(imgRes.messageId.startsWith('MOCK_IMG_'));
+assert.equal(imgRes.caption, 'Here is the diagram');
+console.log('✓ Outbound image verified');
+
+// 5c. Outbound GIF
+const gifRes = await bridge.sendGif('+19876543210', 'https://example.com/celebrate.gif', 'Great job!');
+assert.equal(gifRes.success, true);
+assert.ok(gifRes.messageId.startsWith('MOCK_GIF_'));
+assert.equal(gifRes.caption, 'Great job!');
+console.log('✓ Outbound GIF verified');
+
 // 6. Outbound Reaction
 const reactRes = await bridge.sendReaction('+19876543210', msgRes.messageId, '👍');
 assert.equal(reactRes.success, true);
@@ -50,7 +64,7 @@ console.log('✓ Outbound reaction verified');
 
 // 7. Message History
 const history = bridge.getHistory(10);
-assert.ok(history.length >= 3, 'Should have at least 3 messages in history');
+assert.ok(history.length >= 5, 'Should have at least 5 messages in history');
 console.log(`✓ Message history tracking verified (${history.length} records)`);
 
 // 8. Inbound message simulation event

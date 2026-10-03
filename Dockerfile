@@ -2,7 +2,7 @@
 FROM node:20-alpine AS base
 
 # Install necessary runtime packages
-RUN apk add --no-cache dumb-init git
+RUN apk add --no-cache dumb-init git ffmpeg
 
 WORKDIR /app
 

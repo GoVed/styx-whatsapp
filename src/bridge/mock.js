@@ -1,5 +1,6 @@
 import WhatsAppBridgeBase from './base.js';
 import { getSticker } from '../stickers/search.js';
+import { resolveMentionsInText } from './mentions.js';
 import logger from '../utils/logger.js';
 
 export class MockWhatsAppBridge extends WhatsAppBridgeBase {
@@ -35,13 +36,14 @@ export class MockWhatsAppBridge extends WhatsAppBridgeBase {
     logger.info('Mock WhatsApp Bridge disconnected');
   }
 
-  async sendMessage(to, text) {
+  async sendMessage(to, text, options = {}) {
     if (!text || typeof text !== 'string') {
       throw new Error('Message text is required');
     }
     const jid = this.formatJid(to);
     const messageId = `MOCK_OUT_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const timestamp = Math.floor(Date.now() / 1000);
+    const mentions = Array.isArray(options?.mentions) ? options.mentions : [];
 
     const record = {
       direction: 'outbound',
@@ -49,6 +51,7 @@ export class MockWhatsAppBridge extends WhatsAppBridgeBase {
       messageId,
       to: jid,
       text,
+      mentions,
       timestamp,
       status: 'delivered'
     };
@@ -102,6 +105,74 @@ export class MockWhatsAppBridge extends WhatsAppBridgeBase {
       to: jid,
       stickerId,
       stickerName,
+      timestamp,
+      mode: 'mock'
+    };
+  }
+
+  async sendImage(to, imageSource, caption = '') {
+    if (!imageSource) {
+      throw new Error('Image source (URL, file path, base64, or Buffer) is required');
+    }
+    const jid = this.formatJid(to);
+    const messageId = `MOCK_IMG_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const timestamp = Math.floor(Date.now() / 1000);
+
+    const record = {
+      direction: 'outbound',
+      type: 'image',
+      messageId,
+      to: jid,
+      caption: caption || '',
+      text: caption || '[Image]',
+      message: caption || '[Image]',
+      mediaSource: typeof imageSource === 'string' ? imageSource : 'buffer',
+      timestamp,
+      status: 'delivered'
+    };
+
+    this.recordHistory(record);
+    logger.info({ to: jid, messageId, caption }, '[MOCK WHATSAPP] Outbound image sent');
+
+    return {
+      success: true,
+      messageId,
+      to: jid,
+      caption: caption || '',
+      timestamp,
+      mode: 'mock'
+    };
+  }
+
+  async sendGif(to, gifSource, caption = '') {
+    if (!gifSource) {
+      throw new Error('GIF source (URL, file path, base64, or Buffer) is required');
+    }
+    const jid = this.formatJid(to);
+    const messageId = `MOCK_GIF_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const timestamp = Math.floor(Date.now() / 1000);
+
+    const record = {
+      direction: 'outbound',
+      type: 'gif',
+      messageId,
+      to: jid,
+      caption: caption || '',
+      text: caption || '[GIF]',
+      message: caption || '[GIF]',
+      mediaSource: typeof gifSource === 'string' ? gifSource : 'buffer',
+      timestamp,
+      status: 'delivered'
+    };
+
+    this.recordHistory(record);
+    logger.info({ to: jid, messageId, caption }, '[MOCK WHATSAPP] Outbound GIF sent');
+
+    return {
+      success: true,
+      messageId,
+      to: jid,
+      caption: caption || '',
       timestamp,
       mode: 'mock'
     };
@@ -170,12 +241,16 @@ export class MockWhatsAppBridge extends WhatsAppBridgeBase {
     isGroup = false,
     groupId = null,
     groupName = null,
-    chatName = null
+    chatName = null,
+    mentions = []
   } = {}) {
     const senderJid = this.formatJid(from);
     const chatJid = isGroup && groupId ? this.formatJid(groupId) : senderJid;
     const messageId = `MOCK_IN_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const timestamp = Math.floor(Date.now() / 1000);
+
+    const resolved = resolveMentionsInText(message, mentions, this);
+    const finalMessage = resolved.text;
 
     const inboundEvent = {
       from: from.replace(/@.*$/, ''),
@@ -183,9 +258,14 @@ export class MockWhatsAppBridge extends WhatsAppBridgeBase {
       senderName,
       chatName: chatName || groupName || (isGroup ? 'Mock Group' : senderName),
       groupName: groupName || (isGroup ? 'Mock Group' : null),
-      message,
+      message: finalMessage,
+      text: finalMessage,
+      rawText: resolved.rawText,
+      mentions: resolved.mentions,
+      isSelfTagged: resolved.isSelfTagged,
       messageId,
       timestamp,
+      date: new Date(timestamp * 1000).toISOString(),
       isGroup: Boolean(isGroup),
       chatJid,
       mode: 'mock'

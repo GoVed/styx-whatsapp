@@ -18,6 +18,9 @@ await import('./relay.test.js');
 // 4. Run chat export unit tests
 await import('./chat-export.test.js');
 
+// 5. Run mentions unit tests
+await import('./mentions.test.js');
+
 console.log('Testing MCP 2024-11-05 Server Protocol...');
 
 const bridge = createBridge('mock');
@@ -116,6 +119,42 @@ const parsedStk = JSON.parse(callSendStk.result.content[0].text);
 assert.equal(parsedStk.success, true);
 assert.equal(parsedStk.stickerId, 'cat_shrug');
 console.log('✓ tools/call send_sticker verified');
+
+// 8b. Test MCP 'tools/call' send_image
+const callSendImg = await handleJsonRpc({
+  jsonrpc: '2.0',
+  id: 1051,
+  method: 'tools/call',
+  params: {
+    name: 'send_image',
+    arguments: { to: '+1234567890', image: 'https://example.com/sunset.jpg', caption: 'Beautiful sunset' }
+  }
+}, bridge);
+
+assert.equal(callSendImg.result.isError, false);
+const parsedImg = JSON.parse(callSendImg.result.content[0].text);
+assert.equal(parsedImg.success, true);
+assert.ok(parsedImg.messageId);
+assert.equal(parsedImg.caption, 'Beautiful sunset');
+console.log('✓ tools/call send_image verified');
+
+// 8c. Test MCP 'tools/call' send_gif
+const callSendGif = await handleJsonRpc({
+  jsonrpc: '2.0',
+  id: 1052,
+  method: 'tools/call',
+  params: {
+    name: 'send_gif',
+    arguments: { to: '+1234567890', gif: 'https://example.com/party.gif', caption: 'Party time!' }
+  }
+}, bridge);
+
+assert.equal(callSendGif.result.isError, false);
+const parsedGif = JSON.parse(callSendGif.result.content[0].text);
+assert.equal(parsedGif.success, true);
+assert.ok(parsedGif.messageId);
+assert.equal(parsedGif.caption, 'Party time!');
+console.log('✓ tools/call send_gif verified');
 
 // 9. Test MCP 'tools/call' send_reaction
 const callSendReact = await handleJsonRpc({

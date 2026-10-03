@@ -97,13 +97,14 @@ export function registerSocketListeners(bridge, sock, saveCreds) {
       bridge.emit('connection', { state: 'connected', user: bridge.userInfo });
       logger.info({ user: bridge.userInfo }, 'WhatsApp connection established successfully!');
 
+      // Explicitly mark presence as unavailable so WhatsApp treats this session
+      // as a passive background bridge, preventing mobile notification loops and active desktop alerts
       try {
-        if (typeof sock.resyncAppState === 'function') {
-          sock.resyncAppState(['critical_unblock_low', 'critical_block', 'regular_high', 'regular_low', 'regular'])
-            .catch((err) => logger.debug({ err: err?.message }, 'resyncAppState notice'));
+        if (typeof sock.sendPresenceUpdate === 'function') {
+          await sock.sendPresenceUpdate('unavailable');
         }
-      } catch {
-        // ignore
+      } catch (err) {
+        logger.debug({ err: err?.message }, 'sendPresenceUpdate notice');
       }
 
       // Automatically sync participating group metadata and subjects
@@ -118,8 +119,9 @@ export function registerSocketListeners(bridge, sock, saveCreds) {
   // Inbound & Outbound messages listener (real-time messages)
   sock.ev.on('messages.upsert', async (upsert) => {
     const messages = upsert.messages || [];
+    const isHistoric = upsert.type === 'append';
     for (const msg of messages) {
-      bridge.processRawMessage(msg, false);
+      bridge.processRawMessage(msg, isHistoric);
     }
   });
 

@@ -43,18 +43,67 @@ export const TOOL_DEFINITIONS = [
     }
   },
   {
-    name: 'send_message',
-    description: 'Send a plain text message to a WhatsApp contact or group chat.',
+    name: 'send_image',
+    description: 'Send a photo or image (JPEG, PNG, WebP, GIF) with an optional caption to a WhatsApp contact or group chat. Accepts an image URL (HTTP/HTTPS) or a local file path.',
     inputSchema: {
       type: 'object',
       properties: {
         to: {
           type: 'string',
-          description: 'Recipient contact name (e.g. "Alice"), phone number (e.g. "+1234567890"), or WhatsApp JID (e.g. "155500011122233@lid" or "1234567890@s.whatsapp.net")'
+          description: 'Recipient contact name (e.g. "Alice"), phone number (e.g. "+1234567890"), or WhatsApp JID'
+        },
+        image: {
+          type: 'string',
+          description: 'Image URL (http/https) or local file path to the image (JPEG, PNG, WebP, or GIF)'
+        },
+        caption: {
+          type: 'string',
+          description: 'Optional caption text to accompany the image'
+        }
+      },
+      required: ['to', 'image']
+    }
+  },
+  {
+    name: 'send_gif',
+    description: 'Send an animated GIF or looping video clip with an optional caption to a WhatsApp contact or group chat. Accepts an animated GIF or MP4 video URL (e.g. from GIPHY, Tenor, or web search) or a local file path.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        to: {
+          type: 'string',
+          description: 'Recipient contact name (e.g. "Alice"), phone number (e.g. "+1234567890"), or WhatsApp JID'
+        },
+        gif: {
+          type: 'string',
+          description: 'Animated GIF or MP4 video URL (http/https) or local file path'
+        },
+        caption: {
+          type: 'string',
+          description: 'Optional caption text to accompany the GIF'
+        }
+      },
+      required: ['to', 'gif']
+    }
+  },
+  {
+    name: 'send_message',
+    description: 'Send a plain text message to a WhatsApp contact or group chat. In group chats, you can tag members using @Name (e.g. "@Alice") or pass explicit mentions to notify them.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        to: {
+          type: 'string',
+          description: 'Recipient contact name (e.g. "Alice"), group name (e.g. "Engineering Team"), phone number, or full WhatsApp JID. You can simply pass the human-readable contact or group name directly.'
         },
         message: {
           type: 'string',
-          description: 'Text content to send'
+          description: 'Text content to send (supports @Name tagging in group chats)'
+        },
+        mentions: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Optional list of contact names, phone numbers, or JIDs to explicitly tag/mention in group chats'
         }
       },
       required: ['to', 'message']

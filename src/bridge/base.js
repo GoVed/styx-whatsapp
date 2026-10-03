@@ -82,7 +82,7 @@ export class WhatsAppBridgeBase extends EventEmitter {
   recordHistory(item) {
     if (!item) return;
     // Guard against empty or blank non-media records entering history
-    if (!item.text && !item.message && item.type !== 'sticker' && item.type !== 'image' && item.type !== 'video' && item.type !== 'audio' && item.type !== 'document') {
+    if (!item.text && !item.message && item.type !== 'sticker' && item.type !== 'image' && item.type !== 'gif' && item.type !== 'video' && item.type !== 'audio' && item.type !== 'document') {
       return;
     }
 
@@ -243,6 +243,14 @@ export class WhatsAppBridgeBase extends EventEmitter {
 
   async sendSticker(to, stickerIdOrBuffer) {
     throw new Error('sendSticker() must be implemented by subclass');
+  }
+
+  async sendImage(to, imageSource, caption) {
+    throw new Error('sendImage() must be implemented by subclass');
+  }
+
+  async sendGif(to, gifSource, caption) {
+    throw new Error('sendGif() must be implemented by subclass');
   }
 
   async sendReaction(to, messageId, emoji) {
