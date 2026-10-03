@@ -28,11 +28,10 @@ export async function sendLiveMessage(bridge, to, text, options = {}) {
   }
 
   const jid = bridge.formatJid(to);
-  let mentions = Array.isArray(options?.mentions) ? options.mentions : [];
-  if (mentions.length === 0 && (jid.endsWith('@g.us') || text.includes('@'))) {
-    mentions = resolveOutboundMentions(text, bridge).mentions;
-  }
-  const sendPayload = mentions.length > 0 ? { text, mentions } : { text };
+  const resolved = resolveOutboundMentions(text, bridge, { chatJid: jid, explicitMentions: options?.mentions });
+  const mentions = resolved.mentions;
+  const wireText = resolved.wireText || text;
+  const sendPayload = mentions.length > 0 ? { text: wireText, mentions } : { text: wireText };
   const sent = await bridge.sock.sendMessage(jid, sendPayload);
   const messageId = sent?.key?.id || `LIVE_OUT_${Date.now()}`;
   const timestamp = Math.floor(Date.now() / 1000);
@@ -48,21 +47,24 @@ export async function sendLiveMessage(bridge, to, text, options = {}) {
     targetName: (targetContact?.name && targetContact.name !== jid)
       ? targetContact.name
       : (!to.includes('@') && !/^\+?\d+$/.test(to) ? to : (targetContact?.name || jid)),
-    text,
-    message: text,
-    mentions,
+    text: resolved.text || text,
+    rawText: wireText,
+    message: resolved.text || text,
+    mentions: resolved.resolvedMentions || mentions,
     timestamp,
     status: 'sent'
   };
 
   bridge.recordHistory(record);
-  logger.info({ to: jid, messageId, text }, 'Outbound WhatsApp text dispatched');
+  logger.info({ to: jid, messageId, mentionsCount: mentions.length }, 'Outbound WhatsApp text dispatched');
 
   return {
     success: true,
     messageId,
     to: jid,
-    text,
+    text: resolved.text || text,
+    rawText: wireText,
+    mentions,
     timestamp,
     mode: 'live'
   };
@@ -256,9 +258,11 @@ export async function sendLiveImage(bridge, to, imageSource, caption = '') {
     return sendLiveGif(bridge, to, buffer, caption);
   }
 
+  const capResolved = caption ? resolveOutboundMentions(caption, bridge, { chatJid: jid }) : null;
   const sent = await bridge.sock.sendMessage(jid, {
     image: buffer,
-    caption: caption || undefined,
+    caption: capResolved?.wireText || caption || undefined,
+    mentions: capResolved?.mentions?.length ? capResolved.mentions : undefined,
     mimetype: detected.mimetype
   });
 
@@ -267,7 +271,8 @@ export async function sendLiveImage(bridge, to, imageSource, caption = '') {
   const { mediaPath, mediaUrl } = saveMediaToCache(buffer, messageId, detected.ext);
 
   recordOutboundMedia(bridge, {
-    jid, to, type: 'image', messageId, caption, mediaUrl, mediaPath, timestamp
+    jid, to, type: 'image', messageId, caption: capResolved?.text || caption, mediaUrl, mediaPath, timestamp,
+    mentions: capResolved?.resolvedMentions || capResolved?.mentions
   });
   logger.info({ to: jid, messageId, caption }, 'Outbound WhatsApp image dispatched');
 
@@ -275,7 +280,7 @@ export async function sendLiveImage(bridge, to, imageSource, caption = '') {
     success: true,
     messageId,
     to: jid,
-    caption: caption || '',
+    caption: capResolved?.text || caption || '',
     mediaUrl,
     timestamp,
     mode: 'live'
@@ -309,10 +314,12 @@ export async function sendLiveGif(bridge, to, gifSource, caption = '') {
     videoBuffer = await convertGifToMp4(buffer);
   }
 
+  const capResolved = caption ? resolveOutboundMentions(caption, bridge, { chatJid: jid }) : null;
   const sent = await bridge.sock.sendMessage(jid, {
     video: videoBuffer,
     gifPlayback: true,
-    caption: caption || undefined,
+    caption: capResolved?.wireText || caption || undefined,
+    mentions: capResolved?.mentions?.length ? capResolved.mentions : undefined,
     mimetype: 'video/mp4'
   });
 
@@ -321,7 +328,8 @@ export async function sendLiveGif(bridge, to, gifSource, caption = '') {
   const { mediaPath, mediaUrl } = saveMediaToCache(videoBuffer, messageId, 'mp4');
 
   recordOutboundMedia(bridge, {
-    jid, to, type: 'gif', messageId, caption, mediaUrl, mediaPath, timestamp
+    jid, to, type: 'gif', messageId, caption: capResolved?.text || caption, mediaUrl, mediaPath, timestamp,
+    mentions: capResolved?.resolvedMentions || capResolved?.mentions
   });
   logger.info({ to: jid, messageId, caption }, 'Outbound WhatsApp GIF dispatched');
 

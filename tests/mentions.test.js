@@ -111,6 +111,106 @@ test('WhatsApp Mentions Resolution Test Suite', async (t) => {
 
     const out = resolveOutboundMentions(text, bridge);
     assert.deepStrictEqual(out.mentions, ['199911122233344@lid']);
+    assert.strictEqual(out.text, 'Thanks @Alice, I will merge it.');
+    assert.strictEqual(out.wireText, 'Thanks @199911122233344, I will merge it.');
+    assert.strictEqual(out.resolvedMentions[0].name, 'Alice');
+  });
+
+  await t.test('resolves multi-word and quoted contact names for outbound wireText', () => {
+    const bridge = {
+      contacts: fakeContacts,
+      chats: fakeChats,
+      history: fakeHistory
+    };
+
+    // Multi-word name without quotes
+    const out1 = resolveOutboundMentions('Hey @Bob Smith, did you test this?', bridge);
+    assert.deepStrictEqual(out1.mentions, ['14155552671@s.whatsapp.net']);
+    assert.strictEqual(out1.text, 'Hey @Bob Smith, did you test this?');
+    assert.strictEqual(out1.wireText, 'Hey @14155552671, did you test this?');
+
+    // Quoted name
+    const out2 = resolveOutboundMentions('Hello @"Bob Smith", please check.', bridge);
+    assert.deepStrictEqual(out2.mentions, ['14155552671@s.whatsapp.net']);
+    assert.strictEqual(out2.wireText, 'Hello @14155552671, please check.');
+
+    // First-name partial match
+    const out3 = resolveOutboundMentions('Ping @Bob for the update', bridge);
+    assert.deepStrictEqual(out3.mentions, ['14155552671@s.whatsapp.net']);
+    assert.strictEqual(out3.wireText, 'Ping @14155552671 for the update');
+  });
+
+  await t.test('resolves @everyone and @all in group chats to all participant JIDs', () => {
+    const groupWithParticipants = new Map([
+      ['120363000000000001@g.us', {
+        jid: '120363000000000001@g.us',
+        name: 'Engineering Team',
+        participants: [
+          { id: '199911122233344@lid', name: 'Alice' },
+          { id: '14155552671@s.whatsapp.net', name: 'Bob Smith' },
+          { id: '18887776655@s.whatsapp.net', name: 'Charlie' }
+        ]
+      }]
+    ]);
+
+    const bridge = {
+      contacts: fakeContacts,
+      chats: groupWithParticipants,
+      history: fakeHistory
+    };
+
+    const out = resolveOutboundMentions('Attention @everyone meeting starts now!', bridge, {
+      chatJid: '120363000000000001@g.us'
+    });
+
+    assert.strictEqual(out.mentions.length, 3);
+    assert.ok(out.mentions.includes('199911122233344@lid'));
+    assert.ok(out.mentions.includes('14155552671@s.whatsapp.net'));
+    assert.ok(out.mentions.includes('18887776655@s.whatsapp.net'));
+  });
+
+  await t.test('resolves explicitMentions passed in options', () => {
+    const bridge = {
+      contacts: fakeContacts,
+      chats: fakeChats,
+      history: fakeHistory
+    };
+
+    const out = resolveOutboundMentions('Good work on the release', bridge, {
+      explicitMentions: ['Alice', '+14155552671']
+    });
+
+    assert.ok(out.mentions.includes('199911122233344@lid'));
+    assert.ok(out.mentions.includes('14155552671@s.whatsapp.net'));
+  });
+
+  await t.test('resolves phone number tags directly in text', () => {
+    const bridge = {
+      contacts: fakeContacts,
+      chats: fakeChats,
+      history: fakeHistory
+    };
+
+    const out = resolveOutboundMentions('Check with @+14155552671 please', bridge);
+    assert.deepStrictEqual(out.mentions, ['14155552671@s.whatsapp.net']);
+    assert.strictEqual(out.wireText, 'Check with @14155552671 please');
+  });
+
+  await t.test('MockWhatsAppBridge sendMessage and sendImage resolve mentions and wireText', async () => {
+    const { MockWhatsAppBridge } = await import('../src/bridge/mock.js');
+    const mock = new MockWhatsAppBridge();
+    mock.contacts = fakeContacts;
+    mock.chats = fakeChats;
+
+    const sent = await mock.sendMessage('120363000000000001@g.us', 'Thanks @Bob Smith!');
+    assert.strictEqual(sent.text, 'Thanks @Bob Smith!');
+    assert.strictEqual(sent.rawText, 'Thanks @14155552671!');
+    assert.deepStrictEqual(sent.mentions, ['14155552671@s.whatsapp.net']);
+
+    const sentImg = await mock.sendImage('120363000000000001@g.us', 'https://example.com/pic.png', 'Look @Alice');
+    assert.strictEqual(sentImg.caption, 'Look @Alice');
+    assert.strictEqual(sentImg.rawCaption, 'Look @199911122233344');
+    assert.deepStrictEqual(sentImg.mentions, ['199911122233344@lid']);
   });
 
   await t.test('dynamically resolves mentions when get_chat_history is called', async () => {

@@ -188,6 +188,7 @@ export class LiveWhatsAppBridge extends WhatsAppBridgeBase {
             ...existing,
             jid,
             name: meta.subject,
+            participants: meta.participants || existing.participants || [],
             unreadCount: existing.unreadCount || 0,
             lastMessageTime: existing.lastMessageTime || meta.creation || 0,
             lastMessageText: existing.lastMessageText || ''

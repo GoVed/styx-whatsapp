@@ -1,6 +1,6 @@
 import WhatsAppBridgeBase from './base.js';
 import { getSticker } from '../stickers/search.js';
-import { resolveMentionsInText } from './mentions.js';
+import { resolveMentionsInText, resolveOutboundMentions } from './mentions.js';
 import { applyReactionToHistory } from './history-ops.js';
 import logger from '../utils/logger.js';
 
@@ -32,12 +32,25 @@ export class MockWhatsAppBridge extends WhatsAppBridgeBase {
     const jid = this.formatJid(to);
     const messageId = `MOCK_OUT_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const timestamp = Math.floor(Date.now() / 1000);
-    const mentions = Array.isArray(options?.mentions) ? options.mentions : [];
+    const resolved = resolveOutboundMentions(text, this, { chatJid: jid, explicitMentions: options?.mentions });
+    const mentions = resolved.mentions;
+    const wireText = resolved.wireText || text;
 
-    const record = { direction: 'outbound', type: 'text', messageId, to: jid, text, mentions, timestamp, status: 'delivered' };
+    const record = {
+      direction: 'outbound',
+      type: 'text',
+      messageId,
+      to: jid,
+      text: resolved.text || text,
+      rawText: wireText,
+      message: resolved.text || text,
+      mentions: resolved.resolvedMentions || mentions,
+      timestamp,
+      status: 'delivered'
+    };
     this.recordHistory(record);
-    logger.info({ to: jid, messageId, text }, '[MOCK WHATSAPP] Outbound message sent');
-    return { success: true, messageId, to: jid, text, timestamp, mode: 'mock' };
+    logger.info({ to: jid, messageId, text: resolved.text || text, mentionsCount: mentions.length }, '[MOCK WHATSAPP] Outbound message sent');
+    return { success: true, messageId, to: jid, text: resolved.text || text, rawText: wireText, mentions, timestamp, mode: 'mock' };
   }
 
   async sendSticker(to, stickerIdOrBuffer) {
@@ -61,14 +74,19 @@ export class MockWhatsAppBridge extends WhatsAppBridgeBase {
     const jid = this.formatJid(to);
     const messageId = `MOCK_IMG_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const timestamp = Math.floor(Date.now() / 1000);
+    const capResolved = caption ? resolveOutboundMentions(caption, this, { chatJid: jid }) : null;
+    const resolvedCaption = capResolved?.text || caption || '';
+    const wireCaption = capResolved?.wireText || caption || '';
+    const mentions = capResolved?.mentions || [];
     const record = {
-      direction: 'outbound', type: 'image', messageId, to: jid, caption: caption || '',
-      text: caption || '[Image]', message: caption || '[Image]',
+      direction: 'outbound', type: 'image', messageId, to: jid, caption: resolvedCaption, rawCaption: wireCaption,
+      text: resolvedCaption || '[Image]', message: resolvedCaption || '[Image]',
+      mentions: capResolved?.resolvedMentions || mentions,
       mediaSource: typeof imageSource === 'string' ? imageSource : 'buffer', timestamp, status: 'delivered'
     };
     this.recordHistory(record);
-    logger.info({ to: jid, messageId, caption }, '[MOCK WHATSAPP] Outbound image sent');
-    return { success: true, messageId, to: jid, caption: caption || '', timestamp, mode: 'mock' };
+    logger.info({ to: jid, messageId, caption: resolvedCaption }, '[MOCK WHATSAPP] Outbound image sent');
+    return { success: true, messageId, to: jid, caption: resolvedCaption, rawCaption: wireCaption, mentions, timestamp, mode: 'mock' };
   }
 
   async sendGif(to, gifSource, caption = '') {
@@ -76,14 +94,19 @@ export class MockWhatsAppBridge extends WhatsAppBridgeBase {
     const jid = this.formatJid(to);
     const messageId = `MOCK_GIF_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const timestamp = Math.floor(Date.now() / 1000);
+    const capResolved = caption ? resolveOutboundMentions(caption, this, { chatJid: jid }) : null;
+    const resolvedCaption = capResolved?.text || caption || '';
+    const wireCaption = capResolved?.wireText || caption || '';
+    const mentions = capResolved?.mentions || [];
     const record = {
-      direction: 'outbound', type: 'gif', messageId, to: jid, caption: caption || '',
-      text: caption || '[GIF]', message: caption || '[GIF]',
+      direction: 'outbound', type: 'gif', messageId, to: jid, caption: resolvedCaption, rawCaption: wireCaption,
+      text: resolvedCaption || '[GIF]', message: resolvedCaption || '[GIF]',
+      mentions: capResolved?.resolvedMentions || mentions,
       mediaSource: typeof gifSource === 'string' ? gifSource : 'buffer', timestamp, status: 'delivered'
     };
     this.recordHistory(record);
-    logger.info({ to: jid, messageId, caption }, '[MOCK WHATSAPP] Outbound GIF sent');
-    return { success: true, messageId, to: jid, caption: caption || '', timestamp, mode: 'mock' };
+    logger.info({ to: jid, messageId, caption: resolvedCaption }, '[MOCK WHATSAPP] Outbound GIF sent');
+    return { success: true, messageId, to: jid, caption: resolvedCaption, rawCaption: wireCaption, mentions, timestamp, mode: 'mock' };
   }
 
   async sendReaction(to, messageId, emoji) {
