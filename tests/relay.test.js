@@ -3,17 +3,17 @@ import assert from 'node:assert/strict';
 import { createBridge } from '../src/bridge/index.js';
 import { createRelay } from '../src/webhook/relay.js';
 
-console.log('Testing Styx Relay Module...');
+console.log('Testing Syndae Relay Module...');
 
-// Spin up a mock Styx OS HTTP server
+// Spin up a mock Syndae OS HTTP server
 let capturedRequest = null;
 let authHeader = null;
 let accessKeyHeader = null;
 
-const mockStyxServer = http.createServer(async (req, res) => {
+const mockSyndaeServer = http.createServer(async (req, res) => {
   if (req.url === '/api/tools/trigger' && req.method === 'POST') {
     authHeader = req.headers['authorization'];
-    accessKeyHeader = req.headers['x-styx-access-key'];
+    accessKeyHeader = req.headers['x-syndae-access-key'];
 
     let body = '';
     req.on('data', chunk => { body += chunk; });
@@ -22,7 +22,7 @@ const mockStyxServer = http.createServer(async (req, res) => {
       res.writeHead(202, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         success: true,
-        session_id: 'mock-styx-session-uuid',
+        session_id: 'mock-syndae-session-uuid',
         turn_id: 'turn-999',
         status: 'running',
         protocol: 'whatsapp',
@@ -35,17 +35,17 @@ const mockStyxServer = http.createServer(async (req, res) => {
   }
 });
 
-await new Promise((resolve) => mockStyxServer.listen(0, '127.0.0.1', resolve));
-const port = mockStyxServer.address().port;
-const mockStyxUrl = `http://127.0.0.1:${port}`;
-console.log(`✓ Mock Styx server running on ${mockStyxUrl}`);
+await new Promise((resolve) => mockSyndaeServer.listen(0, '127.0.0.1', resolve));
+const port = mockSyndaeServer.address().port;
+const mockSyndaeUrl = `http://127.0.0.1:${port}`;
+console.log(`✓ Mock Syndae server running on ${mockSyndaeUrl}`);
 
 const bridge = createBridge('mock');
 await bridge.connect();
 
 const relay = createRelay(bridge, {
-  styxApiUrl: mockStyxUrl,
-  styxAccessKey: 'test-styx-secret-key-123'
+  syndaeApiUrl: mockSyndaeUrl,
+  syndaeAccessKey: 'test-syndae-secret-key-123'
 });
 
 relay.start();
@@ -61,20 +61,20 @@ bridge.simulateInboundMessage({
 // Allow async event loop cycle
 await new Promise(r => setTimeout(r, 200));
 
-// Assert Styx received proper payload
-assert.ok(capturedRequest, 'Mock Styx must have received trigger payload');
+// Assert Syndae received proper payload
+assert.ok(capturedRequest, 'Mock Syndae must have received trigger payload');
 assert.equal(capturedRequest.protocol, 'whatsapp');
 assert.equal(capturedRequest.event_type, 'new_message');
 assert.equal(capturedRequest.source_id, 'Charlie (+15551234567)');
 assert.equal(capturedRequest.payload.from, '+15551234567');
 assert.equal(capturedRequest.payload.sender_name, 'Charlie');
 assert.equal(capturedRequest.payload.message, 'Hey, can you summarize my schedule?');
-console.log('✓ InboundToolEventRequest structure matches Styx OS schema');
+console.log('✓ InboundToolEventRequest structure matches Syndae OS schema');
 
 // Assert authentication headers
-assert.equal(authHeader, 'Bearer test-styx-secret-key-123');
-assert.equal(accessKeyHeader, 'test-styx-secret-key-123');
-console.log('✓ Styx API authorization headers verified');
+assert.equal(authHeader, 'Bearer test-syndae-secret-key-123');
+assert.equal(accessKeyHeader, 'test-syndae-secret-key-123');
+console.log('✓ Syndae API authorization headers verified');
 
 // Test session tracking on subsequent turn
 bridge.simulateInboundMessage({
@@ -84,7 +84,7 @@ bridge.simulateInboundMessage({
 });
 await new Promise(r => setTimeout(r, 200));
 
-assert.equal(capturedRequest.session_id, 'mock-styx-session-uuid');
+assert.equal(capturedRequest.session_id, 'mock-syndae-session-uuid');
 assert.equal(capturedRequest.mode, 'chat');
 assert.equal(capturedRequest.channel_id, '15551234567@s.whatsapp.net');
 console.log('✓ Subsequent turn passes existing session_id, channel_id, and mode: chat');
@@ -107,8 +107,8 @@ assert.equal(capturedRequest.payload.sender_name, 'Bob Participant');
 console.log('✓ Group message forwards group_name and keys off group chat_jid');
 
 // Verify that Bob's direct JID is NOT mapped to the group session ID
-assert.notEqual(relay.getSession('15559876543@s.whatsapp.net'), 'mock-styx-session-uuid');
-assert.equal(relay.getSession('120363028840427086@g.us'), 'mock-styx-session-uuid');
+assert.notEqual(relay.getSession('15559876543@s.whatsapp.net'), 'mock-syndae-session-uuid');
+assert.equal(relay.getSession('120363028840427086@g.us'), 'mock-syndae-session-uuid');
 console.log('✓ Participant isolation verified: group session is not assigned to individual participant JID');
 
 // Check relay stats
@@ -120,5 +120,5 @@ console.log('✓ Relay stats verified');
 
 relay.stop();
 await bridge.disconnect();
-await new Promise(r => mockStyxServer.close(r));
-console.log('All Styx Relay Tests Passed Successfully!\n');
+await new Promise(r => mockSyndaeServer.close(r));
+console.log('All Syndae Relay Tests Passed Successfully!\n');

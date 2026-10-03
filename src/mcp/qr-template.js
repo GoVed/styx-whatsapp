@@ -11,19 +11,19 @@ export function renderQrPage(status, initialQrUrl = '', latestQr = '') {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>WhatsApp Connected - Styx</title>
+        <title>WhatsApp Connected - Syndae</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
       </head>
       <body style="background:#090d16;color:#10b981;font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:3rem;text-align:center;">
         <div style="max-width:440px;margin:0 auto;background:#0d1527;border:1px solid #059669;padding:2.5rem;border-radius:1rem;box-shadow:0 10px 25px rgba(0,0,0,0.5);">
           <div style="font-size:3.5rem;margin-bottom:1rem;color:#34d399;">✓</div>
           <h2 style="margin:0 0 0.5rem 0;color:#fff;font-size:1.5rem;">WhatsApp Connected!</h2>
-          <p style="color:#6ee7b7;font-size:0.9rem;">Your account is linked and ready for Styx Agent OS.</p>
+          <p style="color:#6ee7b7;font-size:0.9rem;">Your account is linked and ready for Syndae Agent OS.</p>
           <div style="background:#052e16;color:#a7f3d0;padding:0.75rem 1rem;border-radius:0.5rem;font-family:monospace;font-size:1rem;margin-top:1.5rem;border:1px solid #065f46;">
             ${status.user?.phone || status.user?.id || 'Linked'}
           </div>
           <p style="color:#64748b;font-size:0.8rem;margin-top:1.5rem;">
-            You can now close this tab and chat with Styx!
+            You can now close this tab and chat with Syndae!
           </p>
         </div>
       </body>
@@ -35,7 +35,7 @@ export function renderQrPage(status, initialQrUrl = '', latestQr = '') {
     <!DOCTYPE html>
     <html>
     <head>
-      <title>Pair WhatsApp - Styx</title>
+      <title>Pair WhatsApp - Syndae</title>
       <meta name="viewport" content="width=device-width, initial-scale=1">
       <style>
         * { box-sizing: border-box; }
@@ -92,12 +92,12 @@ export function renderQrPage(status, initialQrUrl = '', latestQr = '') {
               document.getElementById('cardContainer').innerHTML = \`
                 <div style="font-size:3.5rem;margin-bottom:1rem;color:#34d399;">✓</div>
                 <h2 style="margin:0 0 0.5rem 0;color:#fff;font-size:1.5rem;">WhatsApp Connected!</h2>
-                <p style="color:#6ee7b7;font-size:0.9rem;">Your account is linked and ready for Styx Agent OS.</p>
+                <p style="color:#6ee7b7;font-size:0.9rem;">Your account is linked and ready for Syndae Agent OS.</p>
                 <div style="background:#052e16;color:#a7f3d0;padding:0.75rem 1rem;border-radius:0.5rem;font-family:monospace;font-size:1rem;margin-top:1.5rem;border:1px solid #065f46;">
                   \${data.user?.phone || data.user?.id || 'Linked'}
                 </div>
                 <p style="color:#64748b;font-size:0.8rem;margin-top:1.5rem;">
-                  You can now close this tab and chat with Styx!
+                  You can now close this tab and chat with Syndae!
                 </p>
               \`;
               return;

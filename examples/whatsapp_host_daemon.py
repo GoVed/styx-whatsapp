@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-Styx Host Tool Daemon: Bi-Directional WhatsApp Reactive Bridge Example
+Syndae Host Tool Daemon: Bi-Directional WhatsApp Reactive Bridge Example
 ======================================================================
-Demonstrates the Styx Bi-Directional Reactive Tool Architecture:
+Demonstrates the Syndae Bi-Directional Reactive Tool Architecture:
 1. Tool Daemon runs outside the container on the host.
 2. Inbound Trigger: When an incoming WhatsApp message arrives, the daemon pushes
-   an event to Styx via `POST /api/tools/trigger`.
-3. Styx queues the turn in its GPU inference scheduler (FIFO concurrency control).
+   an event to Syndae via `POST /api/tools/trigger`.
+3. Syndae queues the turn in its GPU inference scheduler (FIFO concurrency control).
 4. The Agent reasons in Docker, checks its markdown skills, searches stickers,
    and calls back to this daemon to send messages and stickers.
-5. Mutating tool calls respect Styx's Human-In-The-Loop (HITL) authorization gate.
+5. Mutating tool calls respect Syndae's Human-In-The-Loop (HITL) authorization gate.
 """
 
 import sys
@@ -18,7 +18,7 @@ import time
 import urllib.request
 import urllib.error
 
-STYX_API_URL = "http://localhost:3000"
+SYNDAE_API_URL = "http://localhost:3000"
 
 # Mock sticker catalog
 STICKER_DATABASE = [
@@ -30,7 +30,7 @@ STICKER_DATABASE = [
 ]
 
 def handle_call_tool(tool_name, args):
-    """Executes tools called by the Styx agent."""
+    """Executes tools called by the Syndae agent."""
     if tool_name == "whatsapp_find_stickers":
         query = args.get("search", "").lower()
         limit = args.get("limit", 5)
@@ -73,8 +73,8 @@ def handle_call_tool(tool_name, args):
         return {"error": f"Unknown tool: {tool_name}"}
 
 def trigger_inbound_message(sender: str, message: str):
-    """Pushes a real-time event from the host tool into Styx to wake the agent."""
-    url = f"{STYX_API_URL}/api/tools/trigger"
+    """Pushes a real-time event from the host tool into Syndae to wake the agent."""
+    url = f"{SYNDAE_API_URL}/api/tools/trigger"
     payload = {
         "protocol": "whatsapp",
         "event_type": "new_message",
@@ -96,10 +96,10 @@ def trigger_inbound_message(sender: str, message: str):
     try:
         with urllib.request.urlopen(req) as resp:
             data = json.loads(resp.read().decode("utf-8"))
-            print(f"[HOST WHATSAPP DAEMON] Inbound trigger dispatched to Styx: {json.dumps(data, indent=2)}")
+            print(f"[HOST WHATSAPP DAEMON] Inbound trigger dispatched to Syndae: {json.dumps(data, indent=2)}")
             return data
     except urllib.error.URLError as e:
-        print(f"[HOST WHATSAPP DAEMON] Error reaching Styx: {e}")
+        print(f"[HOST WHATSAPP DAEMON] Error reaching Syndae: {e}")
         return None
 
 if __name__ == "__main__":

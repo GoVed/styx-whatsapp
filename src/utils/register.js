@@ -3,10 +3,10 @@ import config from '../config.js';
 import logger from './logger.js';
 
 /**
- * Registers the WhatsApp MCP server into Styx Agent OS via POST /api/tools/servers.
+ * Registers the WhatsApp MCP server into Syndae Agent OS via POST /api/tools/servers.
  *
  * @param {object} [options]
- * @param {string} [options.styxUrl]
+ * @param {string} [options.syndaeUrl]
  * @param {string} [options.accessKey]
  * @param {'stdio' | 'http'} [options.transport='stdio']
  * @param {string} [options.serverName='whatsapp']
@@ -14,15 +14,15 @@ import logger from './logger.js';
  * @param {number} [options.port]
  * @returns {Promise<object>}
  */
-export async function registerWithStyx(options = {}) {
-  const styxUrl = (options.styxUrl || config.styxApiUrl).replace(/\/$/, '');
-  const accessKey = options.accessKey !== undefined ? options.accessKey : config.styxAccessKey;
+export async function registerWithSyndae(options = {}) {
+  const syndaeUrl = (options.syndaeUrl || config.syndaeApiUrl).replace(/\/$/, '');
+  const accessKey = options.accessKey !== undefined ? options.accessKey : config.syndaeAccessKey;
   const transport = (options.transport || 'stdio').toLowerCase();
   const serverName = options.serverName || 'whatsapp';
   const mode = options.mode || config.mode;
   const port = options.port || config.httpPort;
 
-  const binPath = path.resolve(config.rootDir, 'bin', 'styx-whatsapp');
+  const binPath = path.resolve(config.rootDir, 'bin', 'syndae-whatsapp');
 
   let requestBody;
   if (transport === 'http') {
@@ -40,25 +40,25 @@ export async function registerWithStyx(options = {}) {
       env: {
         WHATSAPP_MODE: mode,
         WHATSAPP_AUTH_DIR: config.authDir,
-        STYX_API_URL: styxUrl,
-        STYX_ACCESS_KEY: accessKey,
+        SYNDAE_API_URL: syndaeUrl,
+        SYNDAE_ACCESS_KEY: accessKey,
         LOG_LEVEL: 'warn'
       }
     };
   }
 
-  const endpoint = `${styxUrl}/api/tools/servers`;
+  const endpoint = `${syndaeUrl}/api/tools/servers`;
   const headers = {
     'Content-Type': 'application/json',
-    'User-Agent': 'Styx-WhatsApp-Register/1.0.0'
+    'User-Agent': 'Syndae-WhatsApp-Register/1.0.0'
   };
 
   if (accessKey) {
     headers['Authorization'] = `Bearer ${accessKey}`;
-    headers['X-Styx-Access-Key'] = accessKey;
+    headers['X-Syndae-Access-Key'] = accessKey;
   }
 
-  logger.info({ endpoint, transport, serverName }, 'Registering WhatsApp MCP tool with Styx OS');
+  logger.info({ endpoint, transport, serverName }, 'Registering WhatsApp MCP tool with Syndae OS');
 
   try {
     const response = await fetch(endpoint, {
@@ -71,7 +71,7 @@ export async function registerWithStyx(options = {}) {
     const responseData = await response.json().catch(() => null);
 
     if (!response.ok) {
-      const errorMsg = `Styx server registration rejected (HTTP ${response.status}): ${JSON.stringify(responseData)}`;
+      const errorMsg = `Syndae server registration rejected (HTTP ${response.status}): ${JSON.stringify(responseData)}`;
       logger.error({ status: response.status, responseData }, errorMsg);
       return {
         success: false,
@@ -80,13 +80,13 @@ export async function registerWithStyx(options = {}) {
       };
     }
 
-    logger.info({ serverName, responseData }, 'Successfully registered WhatsApp MCP Server with Styx Agent OS!');
+    logger.info({ serverName, responseData }, 'Successfully registered WhatsApp MCP Server with Syndae Agent OS!');
     return {
       success: true,
       data: responseData
     };
   } catch (err) {
-    const errorMsg = `Failed to connect to Styx OS at ${endpoint}: ${err.message}`;
+    const errorMsg = `Failed to connect to Syndae OS at ${endpoint}: ${err.message}`;
     logger.error({ err: err.message }, errorMsg);
     return {
       success: false,
@@ -96,5 +96,5 @@ export async function registerWithStyx(options = {}) {
 }
 
 export default {
-  registerWithStyx
+  registerWithSyndae
 };

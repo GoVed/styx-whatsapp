@@ -4,7 +4,7 @@ import { handleJsonRpc, PROTOCOL_VERSION, SERVER_INFO } from '../src/mcp/server.
 import { TOOL_DEFINITIONS } from '../src/mcp/tools.js';
 import { startHttpServer } from '../src/mcp/http.js';
 
-console.log('=== RUNNING COMPLETE STYX WHATSAPP TEST SUITE ===\n');
+console.log('=== RUNNING COMPLETE SYNDAE WHATSAPP TEST SUITE ===\n');
 
 await import('./stickers.test.js');
 await import('./bridge.test.js');
@@ -26,14 +26,14 @@ const initRes = await handleJsonRpc({
   params: {
     protocolVersion: '2024-11-05',
     capabilities: {},
-    clientInfo: { name: 'styx-harness-test', version: '0.1.0' }
+    clientInfo: { name: 'syndae-harness-test', version: '0.1.0' }
   }
 }, bridge);
 
 assert.equal(initRes.jsonrpc, '2.0');
 assert.equal(initRes.id, 101);
 assert.equal(initRes.result.protocolVersion, '2024-11-05');
-assert.equal(initRes.result.serverInfo.name, 'styx-whatsapp');
+assert.equal(initRes.result.serverInfo.name, 'syndae-whatsapp');
 assert.ok(initRes.result.capabilities.tools);
 console.log('✓ MCP initialize handshake verified (2024-11-05)');
 
@@ -213,7 +213,7 @@ console.log('✓ tools/call fetch_older_messages verified');
 const sampleExport = `
 12/05/2023, 10:45 AM - Messages and calls are end-to-end encrypted. No one outside of this chat, not even WhatsApp, can read or listen to them.
 12/05/2023, 10:46 AM - John Doe: Hey team
-12/05/2023, 10:47 AM - Jane Smith: Working on Styx AI!
+12/05/2023, 10:47 AM - Jane Smith: Working on Syndae AI!
 12/05/2023, 10:48 AM - You: Looking great!
 `;
 const callImport = await handleJsonRpc({
@@ -288,7 +288,7 @@ console.log('✓ GET /health verified');
 
 // Test GET /status
 const statusRes = await fetch(`${baseUrl}/status`).then(r => r.json());
-assert.equal(statusRes.server.name, 'styx-whatsapp');
+assert.equal(statusRes.server.name, 'syndae-whatsapp');
 console.log('✓ GET /status verified');
 
 // Test GET /stickers

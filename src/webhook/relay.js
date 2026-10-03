@@ -3,15 +3,15 @@ import path from 'node:path';
 import config from '../config.js';
 import logger from '../utils/logger.js';
 
-export class StyxRelay {
+export class SyndaeRelay {
   /**
    * @param {import('../bridge/base.js').WhatsAppBridgeBase} bridge
    * @param {object} [options]
    */
   constructor(bridge, options = {}) {
     this.bridge = bridge;
-    this.styxApiUrl = (options.styxApiUrl || config.styxApiUrl).replace(/\/$/, '');
-    this.styxAccessKey = options.styxAccessKey !== undefined ? options.styxAccessKey : config.styxAccessKey;
+    this.syndaeApiUrl = (options.syndaeApiUrl || config.syndaeApiUrl).replace(/\/$/, '');
+    this.syndaeAccessKey = options.syndaeAccessKey !== undefined ? options.syndaeAccessKey : config.syndaeAccessKey;
     this.boundHandler = this.handleInboundMessage.bind(this);
     this.running = false;
     this.stats = {
@@ -21,8 +21,8 @@ export class StyxRelay {
       lastError: null
     };
 
-    // Chat JID -> Styx Session ID mapping persistence
-    this.sessionsFilePath = options.sessionsFilePath || path.join(config.authDir, 'styx_sessions.json');
+    // Chat JID -> Syndae Session ID mapping persistence
+    this.sessionsFilePath = options.sessionsFilePath || path.join(config.authDir, 'syndae_sessions.json');
     this.sessions = new Map();
     this.loadSessionsFromDisk();
   }
@@ -43,7 +43,7 @@ export class StyxRelay {
           }
           logger.info(
             { count: this.sessions.size, path: this.sessionsFilePath },
-            'Loaded persisted WhatsApp-Styx sessions mapping from disk'
+            'Loaded persisted WhatsApp-Syndae sessions mapping from disk'
           );
         }
       }
@@ -85,19 +85,19 @@ export class StyxRelay {
   clearSessions() {
     this.sessions.clear();
     this.saveSessionsToDisk();
-    logger.info('Cleared WhatsApp-Styx session mapping cache');
+    logger.info('Cleared WhatsApp-Syndae session mapping cache');
   }
 
   /**
-   * Starts listening to inbound bridge messages and forwarding to Styx.
+   * Starts listening to inbound bridge messages and forwarding to Syndae.
    */
   start() {
     if (this.running) return;
     this.running = true;
     this.bridge.on('message', this.boundHandler);
     logger.info(
-      { styxApiUrl: this.styxApiUrl, hasAccessKey: Boolean(this.styxAccessKey) },
-      'Styx WhatsApp bi-directional relay active and listening'
+      { syndaeApiUrl: this.syndaeApiUrl, hasAccessKey: Boolean(this.syndaeAccessKey) },
+      'Syndae WhatsApp bi-directional relay active and listening'
     );
   }
 
@@ -108,32 +108,32 @@ export class StyxRelay {
     if (!this.running) return;
     this.running = false;
     this.bridge.removeListener('message', this.boundHandler);
-    logger.info('Styx WhatsApp relay stopped');
+    logger.info('Syndae WhatsApp relay stopped');
   }
 
   /**
-   * Formats headers for Styx OS API authentication.
+   * Formats headers for Syndae OS API authentication.
    * @returns {Record<string, string>}
    */
   getHeaders() {
     const headers = {
       'Content-Type': 'application/json',
-      'User-Agent': 'Styx-WhatsApp-Relay/1.0.0'
+      'User-Agent': 'Syndae-WhatsApp-Relay/1.0.0'
     };
-    if (this.styxAccessKey) {
-      headers['Authorization'] = `Bearer ${this.styxAccessKey}`;
-      headers['X-Styx-Access-Key'] = this.styxAccessKey;
+    if (this.syndaeAccessKey) {
+      headers['Authorization'] = `Bearer ${this.syndaeAccessKey}`;
+      headers['X-Syndae-Access-Key'] = this.syndaeAccessKey;
     }
     return headers;
   }
 
   /**
-   * Forwards a WhatsApp message event to Styx's POST /api/tools/trigger endpoint.
+   * Forwards a WhatsApp message event to Syndae's POST /api/tools/trigger endpoint.
    * @param {object} eventData
    * @returns {Promise<object>}
    */
   async forwardEvent(eventData) {
-    const triggerUrl = `${this.styxApiUrl}/api/tools/trigger`;
+    const triggerUrl = `${this.syndaeApiUrl}/api/tools/trigger`;
     const sourceDesc = eventData.senderName
       ? `${eventData.senderName} (${eventData.from})`
       : eventData.from;
@@ -198,7 +198,7 @@ export class StyxRelay {
     try {
       logger.debug(
         { triggerUrl, sourceDesc, chatIdentifier, existingSessionId },
-        'Forwarding inbound event to Styx Agent OS'
+        'Forwarding inbound event to Syndae Agent OS'
       );
 
       const response = await fetch(triggerUrl, {
@@ -211,7 +211,7 @@ export class StyxRelay {
       const responseData = await response.json().catch(() => null);
 
       if (!response.ok) {
-        const errorMsg = `Styx API responded with HTTP ${response.status}: ${JSON.stringify(responseData)}`;
+        const errorMsg = `Syndae API responded with HTTP ${response.status}: ${JSON.stringify(responseData)}`;
         logger.warn({ status: response.status, responseData }, errorMsg);
         this.stats.failedCount++;
         this.stats.lastError = errorMsg;
@@ -222,7 +222,7 @@ export class StyxRelay {
         };
       }
 
-      // Record session mapping from Styx response (isolating group chats strictly to chatJid)
+      // Record session mapping from Syndae response (isolating group chats strictly to chatJid)
       if (responseData?.session_id) {
         if (isGroup) {
           if (eventData.chatJid) this.sessions.set(eventData.chatJid, responseData.session_id);
@@ -243,7 +243,7 @@ export class StyxRelay {
           status: responseData?.status,
           chatIdentifier
         },
-        'Inbound WhatsApp message successfully queued in Styx Agent OS'
+        'Inbound WhatsApp message successfully queued in Syndae Agent OS'
       );
 
       return {
@@ -251,7 +251,7 @@ export class StyxRelay {
         data: responseData
       };
     } catch (err) {
-      const errorMsg = `Failed to connect to Styx API at ${triggerUrl}: ${err.message}`;
+      const errorMsg = `Failed to connect to Syndae API at ${triggerUrl}: ${err.message}`;
       logger.warn({ err: err.message, triggerUrl }, errorMsg);
       this.stats.failedCount++;
       this.stats.lastError = errorMsg;
@@ -274,16 +274,16 @@ export class StyxRelay {
     return {
       ...this.stats,
       running: this.running,
-      styxApiUrl: this.styxApiUrl
+      syndaeApiUrl: this.syndaeApiUrl
     };
   }
 }
 
 export function createRelay(bridge, options) {
-  return new StyxRelay(bridge, options);
+  return new SyndaeRelay(bridge, options);
 }
 
 export default {
-  StyxRelay,
+  SyndaeRelay,
   createRelay
 };

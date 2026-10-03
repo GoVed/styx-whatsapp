@@ -164,7 +164,7 @@ export const stickers = {
       <text x="256" y="224" font-family="monospace" font-size="20" font-weight="bold" fill="#34D399" text-anchor="middle">&lt;DEV_MODE/&gt;</text>
       <polygon points="140,380 372,380 412,430 100,430" fill="#0F172A" stroke="#38BDF8" stroke-width="4"/>
       <rect x="160" y="280" width="192" height="105" rx="8" fill="#047857" stroke="#34D399" stroke-width="4"/>
-      <text x="256" y="340" font-family="monospace" font-size="28" font-weight="bold" fill="#A7F3D0" text-anchor="middle">STYX AI</text>
+      <text x="256" y="340" font-family="monospace" font-size="28" font-weight="bold" fill="#A7F3D0" text-anchor="middle">SYNDAE AI</text>
       <ellipse cx="190" cy="385" rx="25" ry="18" fill="#64748B"/>
       <ellipse cx="322" cy="385" rx="25" ry="18" fill="#64748B"/>
     </svg>

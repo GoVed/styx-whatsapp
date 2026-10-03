@@ -1,11 +1,11 @@
 {
-  "name": "@styx-tools/whatsapp",
+  "name": "@syndae-tools/whatsapp",
   "version": "1.0.0",
-  "description": "Isolated Bi-Directional WhatsApp Connect Micro-Daemon & MCP Tool for Styx Agent OS",
+  "description": "Isolated Bi-Directional WhatsApp Connect Micro-Daemon & MCP Tool for Syndae Agent OS",
   "type": "module",
   "main": "src/index.js",
   "bin": {
-    "styx-whatsapp": "./bin/styx-whatsapp"
+    "syndae-whatsapp": "./bin/syndae-whatsapp"
   },
   "scripts": {
     "start": "node src/index.js daemon",
@@ -18,7 +18,7 @@
     "test": "node tests/mcp.test.js"
   },
   "keywords": [
-    "styx",
+    "syndae",
     "whatsapp",
     "mcp",
     "model-context-protocol",
@@ -26,7 +26,7 @@
     "baileys",
     "security-isolation"
   ],
-  "author": "Styx Community",
+  "author": "Syndae Community",
   "license": "MIT",
   "dependencies": {
     "@whiskeysockets/baileys": "^6.7.19",

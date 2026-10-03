@@ -26,7 +26,7 @@ export function registerSocketListeners(bridge, sock, saveCreds) {
       bridge.reconnectAttempts = 0;
       bridge.emit('connection', { state: 'qr_ready', qr });
 
-      process.stderr.write('\n\n=== STYX WHATSAPP PAIRING QR CODE ===\n');
+      process.stderr.write('\n\n=== SYNDAE WHATSAPP PAIRING QR CODE ===\n');
       process.stderr.write('Scan this QR code with WhatsApp on your phone (Linked Devices):\n\n');
       qrcodeTerminal.generate(qr, { small: true }, (qrcode) => {
         process.stderr.write(qrcode + '\n\n');
@@ -91,7 +91,7 @@ export function registerSocketListeners(bridge, sock, saveCreds) {
       bridge.userInfo = {
         id: user?.id || 'unknown',
         phone: `+${phone}`,
-        name: user?.name || user?.notify || 'Styx Operator'
+        name: user?.name || user?.notify || 'Syndae Operator'
       };
 
       bridge.emit('connection', { state: 'connected', user: bridge.userInfo });

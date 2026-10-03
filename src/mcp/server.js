@@ -3,7 +3,7 @@ import logger from '../utils/logger.js';
 
 export const PROTOCOL_VERSION = '2024-11-05';
 export const SERVER_INFO = {
-  name: 'styx-whatsapp',
+  name: 'syndae-whatsapp',
   version: '1.0.0'
 };
 

@@ -27,8 +27,8 @@ async function buildAll() {
     // Format into standard WhatsApp WebP Sticker with Exif
     const pngBuf = fs.readFileSync(pngPath);
     const sticker = new Sticker(pngBuf, {
-      pack: 'Styx Assistant',
-      author: 'Styx',
+      pack: 'Syndae Assistant',
+      author: 'Syndae',
       type: StickerTypes.DEFAULT,
       quality: 90
     });

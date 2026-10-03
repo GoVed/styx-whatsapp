@@ -206,7 +206,7 @@ export const TOOL_DEFINITIONS = [
   },
   {
     name: 'simulate_inbound_message',
-    description: 'Simulate an incoming WhatsApp message into the bridge and trigger the Styx reactive agent OS workflow.',
+    description: 'Simulate an incoming WhatsApp message into the bridge and trigger the Syndae reactive agent OS workflow.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -236,7 +236,7 @@ export const TOOL_DEFINITIONS = [
   },
   {
     name: 'import_chat_export',
-    description: 'Ingest a complete WhatsApp chat history export file (.txt) into Styx message history and memory. Parses thousands of messages across iOS and Android formats with chronological ordering, deduplication, and participant extraction.',
+    description: 'Ingest a complete WhatsApp chat history export file (.txt) into Syndae message history and memory. Parses thousands of messages across iOS and Android formats with chronological ordering, deduplication, and participant extraction.',
     inputSchema: {
       type: 'object',
       properties: {

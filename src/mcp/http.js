@@ -17,7 +17,7 @@ const __dirname = path.dirname(__filename);
 /**
  * Creates and configures the Express application for MCP HTTP transport & management.
  * @param {import('../bridge/base.js').WhatsAppBridgeBase} bridge
- * @param {import('../webhook/relay.js').StyxRelay} [relay]
+ * @param {import('../webhook/relay.js').SyndaeRelay} [relay]
  * @returns {import('express').Express}
  */
 export function createHttpApp(bridge, relay = null) {
@@ -29,14 +29,14 @@ export function createHttpApp(bridge, relay = null) {
   app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Styx-Access-Key');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Syndae-Access-Key');
     if (req.method === 'OPTIONS') {
       return res.sendStatus(204);
     }
     next();
   });
 
-  // MCP JSON-RPC 2.0 Handler (compatible with Styx McpTransport::connect_http)
+  // MCP JSON-RPC 2.0 Handler (compatible with Syndae McpTransport::connect_http)
   const jsonRpcHandler = async (req, res) => {
     try {
       const resp = await handleJsonRpc(req.body, bridge);
@@ -92,15 +92,15 @@ export function createHttpApp(bridge, relay = null) {
       relay: relay ? relay.getStats() : null,
       config: {
         mode: config.mode,
-        styxApiUrl: config.styxApiUrl,
-        hasStyxAccessKey: Boolean(config.styxAccessKey),
+        syndaeApiUrl: config.syndaeApiUrl,
+        hasSyndaeAccessKey: Boolean(config.syndaeAccessKey),
         httpPort: config.httpPort,
         httpHost: config.httpHost
       }
     });
   });
 
-  // Styx Session cache inspect and clear endpoints
+  // Syndae Session cache inspect and clear endpoints
   app.get('/sessions', (req, res) => {
     if (!relay) {
       return res.status(404).json({ success: false, error: 'Relay not attached to HTTP server' });
@@ -269,7 +269,7 @@ export async function startHttpServer(options = {}) {
     const server = app.listen(port, host, () => {
       logger.info(
         { port, host, mode },
-        `Styx WhatsApp MCP HTTP Server listening at http://${host}:${port}`
+        `Syndae WhatsApp MCP HTTP Server listening at http://${host}:${port}`
       );
       resolve({ server, app, port, host, bridge, relay });
     });

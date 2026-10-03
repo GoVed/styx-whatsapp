@@ -6,7 +6,7 @@ import logger from '../utils/logger.js';
 
 /**
  * Starts the MCP Server using stdio transport (Line-delimited JSON-RPC over stdin/stdout).
- * Perfect for direct subprocess integration with Styx Agent OS (McpTransport::connect_stdio).
+ * Perfect for direct subprocess integration with Syndae Agent OS (McpTransport::connect_stdio).
  *
  * @param {object} [options]
  * @param {'live' | 'mock'} [options.mode]
@@ -14,7 +14,7 @@ import logger from '../utils/logger.js';
  */
 export async function startStdioServer(options = {}) {
   const mode = options.mode || config.mode;
-  logger.info({ mode }, 'Starting Styx WhatsApp MCP Server (stdio transport)...');
+  logger.info({ mode }, 'Starting Syndae WhatsApp MCP Server (stdio transport)...');
 
   const bridge = getBridge(mode);
   await bridge.connect().catch(err => {

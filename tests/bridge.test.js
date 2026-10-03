@@ -29,7 +29,7 @@ assert.ok(user.phone, 'User should have phone');
 console.log('✓ Bridge connection verified');
 
 // 4. Outbound Text Message
-const msgRes = await bridge.sendMessage('+19876543210', 'Test message from Styx');
+const msgRes = await bridge.sendMessage('+19876543210', 'Test message from Syndae');
 assert.equal(msgRes.success, true);
 assert.equal(msgRes.to, '19876543210@s.whatsapp.net');
 assert.ok(msgRes.messageId.startsWith('MOCK_OUT_'));
@@ -75,13 +75,13 @@ bridge.on('message', (evt) => {
 
 const sim = bridge.simulateInboundMessage({
   from: '+15559998877',
-  message: 'Hey Styx, free for lunch?',
+  message: 'Hey Syndae, free for lunch?',
   senderName: 'Bob'
 });
 
 assert.ok(receivedEvent, 'Inbound message event should have fired');
 assert.equal(receivedEvent.from, '+15559998877');
-assert.equal(receivedEvent.message, 'Hey Styx, free for lunch?');
+assert.equal(receivedEvent.message, 'Hey Syndae, free for lunch?');
 assert.equal(receivedEvent.senderName, 'Bob');
 console.log('✓ Inbound message simulation event verified');
 

@@ -1,11 +1,11 @@
 # Skillset: WhatsApp Connector & Messaging Integration
 
 ## 1. Tool Overview & Architecture
-The WhatsApp Connector is an isolated micro-daemon running alongside Styx Agent OS. It bridges Baileys WhatsApp Web sockets to standard Model Context Protocol (MCP 2024-11-05) and relays reactive inbound events to Styx via HTTP webhooks.
+The WhatsApp Connector is an isolated micro-daemon running alongside Syndae Agent OS. It bridges Baileys WhatsApp Web sockets to standard Model Context Protocol (MCP 2024-11-05) and relays reactive inbound events to Syndae via HTTP webhooks.
 
 ### Integration Channels:
-- **Inbound Events**: Dispatched to `POST /api/tools/trigger` with `protocol: "whatsapp"`. Styx automatically routes incoming messages from the same sender into a persistent, multi-turn chat session.
-- **Outbound Execution**: Dispatched by Styx agent calling MCP tools over JSON-RPC at `http://host.docker.internal:8765/mcp`.
+- **Inbound Events**: Dispatched to `POST /api/tools/trigger` with `protocol: "whatsapp"`. Syndae automatically routes incoming messages from the same sender into a persistent, multi-turn chat session.
+- **Outbound Execution**: Dispatched by Syndae agent calling MCP tools over JSON-RPC at `http://host.docker.internal:8765/mcp`.
 - **Human-in-the-Loop (HITL) Gate**: Mutating outbound actions (`send_message`, `send_sticker`, `send_reaction`) require explicit operator confirmation before execution.
 
 ---
@@ -68,7 +68,7 @@ The WhatsApp Connector is an isolated micro-daemon running alongside Styx Agent 
 
 ## 3. Protocol for Reactive Inbound Messages
 When an inbound message event arrives:
-1. **Never Speak Directly to External Senders**: External contacts do not see your Styx chat output. Always address your operator.
+1. **Never Speak Directly to External Senders**: External contacts do not see your Syndae chat output. Always address your operator.
 2. **Context & Tone Retrieval**:
    - Check `people/<sender>.md` and `groups/<group>.md` for relationship dynamics, history, and preferred language.
    - Check `dictionary/*.md` for shared slang or shorthand.

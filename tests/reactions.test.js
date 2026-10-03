@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { MockWhatsAppBridge } from '../src/bridge/mock.js';
 import { applyReactionToHistory } from '../src/bridge/history-ops.js';
-import { StyxRelay } from '../src/webhook/relay.js';
+import { SyndaeRelay } from '../src/webhook/relay.js';
 import { executeTool } from '../src/mcp/tools.js';
 
 test('Reactions: applyReactionToHistory logic', () => {
@@ -117,14 +117,14 @@ test('Reactions: MockWhatsAppBridge sendReaction and simulateInboundReaction', a
   assert.equal(targetInHistory.reactions[0].senderName, 'Charlie');
 });
 
-test('Reactions: StyxRelay forwards reaction event_type with payload metadata', async () => {
+test('Reactions: SyndaeRelay forwards reaction event_type with payload metadata', async () => {
   const bridge = new MockWhatsAppBridge();
   await bridge.connect();
 
   const forwardedEvents = [];
-  const relay = new StyxRelay(bridge, {
-    styxApiUrl: 'http://mock-styx:3000',
-    styxAccessKey: 'test-key'
+  const relay = new SyndaeRelay(bridge, {
+    syndaeApiUrl: 'http://mock-syndae:3000',
+    syndaeAccessKey: 'test-key'
   });
 
   // Mock forwardEvent

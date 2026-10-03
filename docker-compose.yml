@@ -1,9 +1,9 @@
 services:
-  styx-whatsapp:
+  syndae-whatsapp:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: styx-whatsapp-connector
+    container_name: syndae-whatsapp-connector
     restart: unless-stopped
     ports:
       - "8765:8765"
@@ -11,8 +11,8 @@ services:
       # Mode: "mock" (offline sandbox) or "live" (Baileys real WhatsApp Web QR)
       - WHATSAPP_MODE=${WHATSAPP_MODE:-live}
       - WHATSAPP_AUTH_DIR=/app/.auth_session
-      - STYX_API_URL=http://host.docker.internal:3000
-      - STYX_ACCESS_KEY=${STYX_ACCESS_KEY:-styx-local-dev-key}
+      - SYNDAE_API_URL=http://host.docker.internal:3000
+      - SYNDAE_ACCESS_KEY=${SYNDAE_ACCESS_KEY:-syndae-local-dev-key}
       - HTTP_PORT=8765
       - HTTP_HOST=0.0.0.0
       - LOG_LEVEL=${LOG_LEVEL:-info}

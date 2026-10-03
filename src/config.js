@@ -23,9 +23,9 @@ export const config = {
   authDir: path.resolve(ROOT_DIR, process.env.WHATSAPP_AUTH_DIR || './.auth_session'),
   mediaDir: path.resolve(ROOT_DIR, process.env.WHATSAPP_MEDIA_DIR || path.join(process.env.WHATSAPP_AUTH_DIR || './.auth_session', 'media')),
 
-  // Styx Agent OS integration
-  styxApiUrl: (process.env.STYX_API_URL || 'http://localhost:3000').replace(/\/$/, ''),
-  styxAccessKey: process.env.STYX_ACCESS_KEY || '',
+  // Syndae Agent OS integration
+  syndaeApiUrl: (process.env.SYNDAE_API_URL || 'http://localhost:3000').replace(/\/$/, ''),
+  syndaeAccessKey: process.env.SYNDAE_ACCESS_KEY || '',
 
   // MCP HTTP Server configuration
   httpPort: parseInt(process.env.HTTP_PORT || '8765', 10),

@@ -21,7 +21,7 @@ export function resolveContactName(target, { contacts, chats, history, userInfo 
   const chatsMap = chats || new Map();
   const historyArr = Array.isArray(history) ? history : [];
 
-  // 1. Check if the target is the current user / Styx operator
+  // 1. Check if the target is the current user / Syndae operator
   const myPhone = userInfo?.phone?.replace(/\D/g, '');
   const myId = userInfo?.id?.replace(/@.*$/, '')?.replace(/:\d+$/, '');
   const isDirectMe = Boolean((myPhone && cleanId === myPhone) || (myId && cleanId === myId) || (userInfo?.lid && target.includes(userInfo.lid.replace(/@.*$/, ''))));
@@ -109,7 +109,7 @@ export function resolveMentionsInText(text, mentionedJids = [], bridgeContext = 
 
     let displayTag = `@${info.name}`;
     if (info.isMe) {
-      displayTag = info.name && info.name !== 'You' && info.name !== 'Styx Operator'
+      displayTag = info.name && info.name !== 'You' && info.name !== 'Syndae Operator'
         ? `@You (${info.name})`
         : '@You';
     }

@@ -1,10 +1,10 @@
-# @styx-tools/whatsapp
+# @syndae-tools/whatsapp
 
-[![Styx Tool](https://img.shields.io/badge/Styx-Agent%20OS%20Connector-6366f1.svg)](https://github.com/styx-ai/styx)
+[![Syndae Tool](https://img.shields.io/badge/Syndae-Agent%20OS%20Connector-6366f1.svg)](https://github.com/syndae-ai/syndae)
 [![MCP Protocol](https://img.shields.io/badge/MCP-2024--11--05-10b981.svg)](https://modelcontextprotocol.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> Isolated Bi-Directional WhatsApp Connect Micro-Daemon & MCP 2024-11-05 Server for **Styx Agent OS**.
+> Isolated Bi-Directional WhatsApp Connect Micro-Daemon & MCP 2024-11-05 Server for **Syndae Agent OS**.
 
 ---
 
@@ -18,13 +18,13 @@
   - [1. Offline Mock Simulator (Default)](#1-offline-mock-simulator-default)
   - [2. Live Baileys WhatsApp Connection](#2-live-baileys-whatsapp-connection)
 - [Sticker Catalog & Emotional Tone Etiquette](#sticker-catalog--emotional-tone-etiquette)
-- [Bi-Directional Styx Relay](#bi-directional-styx-relay)
+- [Bi-Directional Syndae Relay](#bi-directional-syndae-relay)
 - [Model Context Protocol (MCP 2024-11-05) Server](#model-context-protocol-mcp-2024-11-05-server)
   - [Stdio Transport](#stdio-transport)
   - [HTTP Transport](#http-transport)
   - [Registered Tools](#registered-tools)
-- [CLI Reference (`bin/styx-whatsapp`)](#cli-reference-binstyx-whatsapp)
-- [Styx Auto-Registration](#styx-auto-registration)
+- [CLI Reference (`bin/syndae-whatsapp`)](#cli-reference-binsyndae-whatsapp)
+- [Syndae Auto-Registration](#syndae-auto-registration)
 - [Docker Deployment](#docker-deployment)
 - [Testing](#testing)
 
@@ -32,9 +32,9 @@
 
 ## Overview & Architecture
 
-`@styx-tools/whatsapp` bridges WhatsApp messaging with **Styx Agent OS** through:
-1. **Inbound Event Push:** Pushing real-time incoming WhatsApp messages to Styx's reactive endpoint (`POST /api/tools/trigger`), spawning dedicated agent sessions and queued turns.
-2. **Outbound Tool Execution:** Exposing high-level MCP 2024-11-05 tools (`send_message`, `send_sticker`, `find_stickers`, `send_reaction`) so the autonomous Styx agent can formulate responses, perform emotional sticker lookups, and interact with human contacts.
+`@syndae-tools/whatsapp` bridges WhatsApp messaging with **Syndae Agent OS** through:
+1. **Inbound Event Push:** Pushing real-time incoming WhatsApp messages to Syndae's reactive endpoint (`POST /api/tools/trigger`), spawning dedicated agent sessions and queued turns.
+2. **Outbound Tool Execution:** Exposing high-level MCP 2024-11-05 tools (`send_message`, `send_sticker`, `find_stickers`, `send_reaction`) so the autonomous Syndae agent can formulate responses, perform emotional sticker lookups, and interact with human contacts.
 
 ```mermaid
 flowchart LR
@@ -42,11 +42,11 @@ flowchart LR
         WA_NET[("WhatsApp Mobile / Web")]
     end
 
-    subgraph Connector["Styx WhatsApp Connector"]
+    subgraph Connector["Syndae WhatsApp Connector"]
         BRIDGE{"Bridge Mode"}
         MOCK["Mock Simulator"]
         LIVE["Live Baileys Socket"]
-        RELAY["Styx Relay"]
+        RELAY["Syndae Relay"]
         MCP_STDIO["MCP Server (stdio)"]
         MCP_HTTP["MCP Server (HTTP :8765)"]
         STICKERS[("Sticker Catalog & Search")]
@@ -64,18 +64,18 @@ flowchart LR
         MCP_HTTP <--> STICKERS
     end
 
-    subgraph StyxOS["Styx Agent OS"]
-        STYX_TRIGGER["POST /api/tools/trigger"]
-        STYX_MCP["McpTransport (stdio/http)"]
-        STYX_AGENT["Autonomous Agent Turn Queue"]
+    subgraph SyndaeOS["Syndae Agent OS"]
+        SYNDAE_TRIGGER["POST /api/tools/trigger"]
+        SYNDAE_MCP["McpTransport (stdio/http)"]
+        SYNDAE_AGENT["Autonomous Agent Turn Queue"]
         
-        STYX_TRIGGER --> STYX_AGENT
-        STYX_AGENT --> STYX_MCP
+        SYNDAE_TRIGGER --> SYNDAE_AGENT
+        SYNDAE_AGENT --> SYNDAE_MCP
     end
 
-    RELAY -->|HTTP POST JSON| STYX_TRIGGER
-    STYX_MCP -->|tools/call| MCP_STDIO
-    STYX_MCP -.->|tools/call| MCP_HTTP
+    RELAY -->|HTTP POST JSON| SYNDAE_TRIGGER
+    SYNDAE_MCP -->|tools/call| MCP_STDIO
+    SYNDAE_MCP -.->|tools/call| MCP_HTTP
 ```
 
 ---
@@ -84,10 +84,10 @@ flowchart LR
 
 - **Dual-Mode Bridge:** Switch effortlessly between an offline mock simulator (for automated testing and local development without WhatsApp credentials) and live multi-device WhatsApp Web connectivity via `@whiskeysockets/baileys`.
 - **QR Terminal Pairing:** Interactive QR code rendering directly in your terminal for WhatsApp Linked Devices pairing.
-- **Bi-Directional Styx OS Relay:** Inbound WhatsApp messages are instantly structured as `InboundToolEventRequest` payloads and delivered to Styx OS at `POST /api/tools/trigger`.
+- **Bi-Directional Syndae OS Relay:** Inbound WhatsApp messages are instantly structured as `InboundToolEventRequest` payloads and delivered to Syndae OS at `POST /api/tools/trigger`.
 - **Tone-Compliant Sticker Engine:** Implements the sticker and emotional context search protocol specified in `instructions.md` (e.g. prioritizing cat/animal decline reactions, shrugs, and celebrations).
-- **Full MCP 2024-11-05 Specification:** Exposes tools over standard line-delimited `stdio` JSON-RPC 2.0 (for direct Styx child process spawning) and `HTTP` transport (for containerized / background daemon setups).
-- **Auto-Registration Command:** One-line command to register this MCP tool server into Styx OS (`bin/styx-whatsapp register`).
+- **Full MCP 2024-11-05 Specification:** Exposes tools over standard line-delimited `stdio` JSON-RPC 2.0 (for direct Syndae child process spawning) and `HTTP` transport (for containerized / background daemon setups).
+- **Auto-Registration Command:** One-line command to register this MCP tool server into Syndae OS (`bin/syndae-whatsapp register`).
 - **Security Sandboxing:** Enforces POSIX `0700` permission lockdown on session keys, redacts sensitive tokens in Pino logs, and routes logs exclusively to `stderr` to ensure `stdout` is pristine for JSON-RPC.
 
 ---
@@ -96,7 +96,7 @@ flowchart LR
 
 1. **Session Credentials Isolation:** Multi-device WhatsApp credentials in `./.auth_session` are explicitly ignored by `.gitignore` and enforced with POSIX `0700` (`rwx------`) permissions at runtime.
 2. **Clean JSON-RPC Protocol Transport:** All Pino logs, diagnostics, and pairing QR codes are routed strictly to `process.stderr`. `process.stdout` is strictly reserved for JSON-RPC 2.0 frames.
-3. **Secret Redaction:** Auth tokens, passwords, keys, and `STYX_ACCESS_KEY` are automatically sanitized and redacted by the internal logger.
+3. **Secret Redaction:** Auth tokens, passwords, keys, and `SYNDAE_ACCESS_KEY` are automatically sanitized and redacted by the internal logger.
 
 ---
 
@@ -106,8 +106,8 @@ flowchart LR
 
 ```bash
 # Clone and enter directory
-git clone git@github.com:GoVed/styx-whatsapp.git
-cd styx-whatsapp
+git clone git@github.com:syndae-org/syndae-whatsapp.git
+cd syndae-whatsapp
 
 # Copy environment template
 cp .env.example .env
@@ -118,8 +118,8 @@ Edit `.env` to configure your settings:
 ```ini
 WHATSAPP_MODE=mock
 WHATSAPP_AUTH_DIR=./.auth_session
-STYX_API_URL=http://localhost:3000
-STYX_ACCESS_KEY=styx-local-dev-key
+SYNDAE_API_URL=http://localhost:3000
+SYNDAE_ACCESS_KEY=syndae-local-dev-key
 HTTP_PORT=8765
 ```
 
@@ -142,7 +142,7 @@ Requires no physical phone, SIM, or internet connection. Perfect for CI/CD, agen
 npm run dev
 
 # Or with CLI
-./bin/styx-whatsapp daemon --mode mock
+./bin/syndae-whatsapp daemon --mode mock
 ```
 
 ### 2. Live Baileys WhatsApp Connection
@@ -157,7 +157,7 @@ npm run login
 # Open WhatsApp on your phone -> Settings -> Linked Devices -> Link a Device -> Scan QR.
 
 # 2. Start the daemon in live mode
-./bin/styx-whatsapp daemon --mode live
+./bin/syndae-whatsapp daemon --mode live
 ```
 
 ---
@@ -173,27 +173,27 @@ Governed by `instructions.md`, the connector features a ranked search engine:
 
 ```bash
 # Search for sad cat
-./bin/styx-whatsapp stickers "sad cat"
+./bin/syndae-whatsapp stickers "sad cat"
 
 # Search for shrug
-./bin/styx-whatsapp stickers "shrug"
+./bin/syndae-whatsapp stickers "shrug"
 
 # List all stickers in catalog
-./bin/styx-whatsapp stickers
+./bin/syndae-whatsapp stickers
 ```
 
 ---
 
-## Bi-Directional Styx Relay
+## Bi-Directional Syndae Relay
 
-When an incoming message arrives, the relay formats and dispatches a POST request to Styx:
+When an incoming message arrives, the relay formats and dispatches a POST request to Syndae:
 
 ```http
 POST /api/tools/trigger HTTP/1.1
 Host: localhost:3000
 Content-Type: application/json
-Authorization: Bearer <STYX_ACCESS_KEY>
-X-Styx-Access-Key: <STYX_ACCESS_KEY>
+Authorization: Bearer <SYNDAE_ACCESS_KEY>
+X-Syndae-Access-Key: <SYNDAE_ACCESS_KEY>
 
 {
   "protocol": "whatsapp",
@@ -213,7 +213,7 @@ X-Styx-Access-Key: <STYX_ACCESS_KEY>
 }
 ```
 
-Styx Agent OS receives this, automatically generates a session titled `[WHATSAPP] Alice (+1234567890)`, loads memory skills (`skills/whatsapp.md`), and queues an agent inference turn!
+Syndae Agent OS receives this, automatically generates a session titled `[WHATSAPP] Alice (+1234567890)`, loads memory skills (`skills/whatsapp.md`), and queues an agent inference turn!
 
 ---
 
@@ -224,13 +224,13 @@ Styx Agent OS receives this, automatically generates a session titled `[WHATSAPP
 Runs standard line-delimited JSON-RPC over `stdin` and `stdout`:
 
 ```bash
-./bin/styx-whatsapp mcp
+./bin/syndae-whatsapp mcp
 ```
 
 ### HTTP Transport
 
 Runs Express HTTP server at `http://127.0.0.1:8765`:
-- `POST /mcp` or `POST /`: JSON-RPC 2.0 handler for Styx `McpTransport::connect_http`
+- `POST /mcp` or `POST /`: JSON-RPC 2.0 handler for Syndae `McpTransport::connect_http`
 - `GET /health`: Healthcheck endpoint
 - `GET /status`: Detailed bridge state and configuration
 - `GET /stickers`: REST query endpoint for stickers
@@ -246,43 +246,43 @@ Runs Express HTTP server at `http://127.0.0.1:8765`:
 | `send_reaction` | `to` *(str)*, `message_id` *(str)*, `emoji` *(str)* | Reacts to a message with an emoji. |
 | `get_whatsapp_status` | *(none)* | Returns bridge connection status, mode, and user info. |
 | `get_chat_history` | `limit` *(num?)* | Returns recent inbound/outbound chat messages. |
-| `simulate_inbound_message` | `from` *(str)*, `message` *(str)*, `sender_name` *(str?)* | Injects a simulated message into Styx trigger queue. |
+| `simulate_inbound_message` | `from` *(str)*, `message` *(str)*, `sender_name` *(str?)* | Injects a simulated message into Syndae trigger queue. |
 
 *(All tools are also accessible with the optional `whatsapp_` prefix, e.g. `whatsapp_send_message`.)*
 
 ---
 
-## CLI Reference (`bin/styx-whatsapp`)
+## CLI Reference (`bin/syndae-whatsapp`)
 
 ```
-Usage: styx-whatsapp [options] [command]
+Usage: syndae-whatsapp [options] [command]
 
 Options:
   -V, --version                output the version number
   -h, --help                   display help for command
 
 Commands:
-  daemon [options]             Start background daemon (bridge + HTTP MCP server + Styx relay)
+  daemon [options]             Start background daemon (bridge + HTTP MCP server + Syndae relay)
   mcp [options]                Start stdio MCP 2024-11-05 Server for direct subprocess piping
   login                        Pair WhatsApp Web terminal QR code in live mode and save credentials
   status [options]             Display status of WhatsApp bridge and local session credentials
-  trigger [options]            Simulate an incoming WhatsApp message and dispatch it to Styx Agent OS
-  register [options]           Auto-register this WhatsApp MCP server directly into Styx
+  trigger [options]            Simulate an incoming WhatsApp message and dispatch it to Syndae Agent OS
+  register [options]           Auto-register this WhatsApp MCP server directly into Syndae
   stickers [options] [search]  Query the sticker catalog (supporting emotional context search)
 ```
 
 ---
 
-## Styx Auto-Registration
+## Syndae Auto-Registration
 
-Register this connector directly into a running Styx Agent OS instance:
+Register this connector directly into a running Syndae Agent OS instance:
 
 ```bash
-# Register using stdio transport (Styx launches child process directly)
-./bin/styx-whatsapp register --transport stdio --styx-url http://localhost:3000
+# Register using stdio transport (Syndae launches child process directly)
+./bin/syndae-whatsapp register --transport stdio --syndae-url http://localhost:3000
 
 # Or register using HTTP transport (when running daemon in background/Docker)
-./bin/styx-whatsapp register --transport http --port 8765 --styx-url http://localhost:3000
+./bin/syndae-whatsapp register --transport http --port 8765 --syndae-url http://localhost:3000
 ```
 
 ---
@@ -315,6 +315,6 @@ npm test
 The test suite validates:
 1. Sticker catalog relevance scoring and fallback WebP buffer generation.
 2. WhatsApp mock bridge lifecycle and message recording.
-3. Bi-directional Styx relay payload schema and auth headers against a mock Styx server.
+3. Bi-directional Syndae relay payload schema and auth headers against a mock Syndae server.
 4. MCP 2024-11-05 JSON-RPC protocol compliance (`initialize`, `tools/list`, `tools/call`, error handling).
 5. MCP HTTP transport endpoints (`/health`, `/status`, `/stickers`, `/mcp`, `/trigger`).

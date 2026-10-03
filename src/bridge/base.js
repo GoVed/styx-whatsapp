@@ -120,8 +120,8 @@ export class WhatsAppBridgeBase extends EventEmitter {
       let chatName = existingChat.name;
 
       if (!isGroup) {
-        if (!chatName || chatName === fallbackName || chatName === 'Styx Operator' || chatName === 'You') {
-          if (!isOutbound && item.senderName && item.senderName !== 'Styx Operator' && item.senderName !== 'You') {
+        if (!chatName || chatName === fallbackName || chatName === 'Syndae Operator' || chatName === 'You') {
+          if (!isOutbound && item.senderName && item.senderName !== 'Syndae Operator' && item.senderName !== 'You') {
             chatName = item.senderName;
           } else if (isOutbound && item.targetName && item.targetName !== fallbackName) {
             chatName = item.targetName;
@@ -178,8 +178,8 @@ export class WhatsAppBridgeBase extends EventEmitter {
     let name = chat.name || existing.name || fallbackName;
 
     // Never overwrite an established group or contact name with generic fallback or operator
-    if (existing.name && existing.name !== fallbackName && existing.name !== 'Styx Operator') {
-      if (!chat.name || chat.name === fallbackName || chat.name === 'Styx Operator') {
+    if (existing.name && existing.name !== fallbackName && existing.name !== 'Syndae Operator') {
+      if (!chat.name || chat.name === fallbackName || chat.name === 'Syndae Operator') {
         name = existing.name;
       }
     }

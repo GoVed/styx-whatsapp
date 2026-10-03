@@ -110,7 +110,7 @@ export function processRawMessage(bridge, msg, isHistoric = false) {
     item.text = item.message;
   }
 
-  if (!fromMe && senderName && senderName !== 'You' && senderName !== 'Styx Operator') {
+  if (!fromMe && senderName && senderName !== 'You' && senderName !== 'Syndae Operator') {
     if (isGroup) {
       bridge.recordChat({ jid: remoteJid, lastMessageText: item.message, lastMessageTime: timestamp });
       if (participant && participant !== remoteJid) bridge.recordContact({ id: participant, name: senderName });

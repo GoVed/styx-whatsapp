@@ -1,4 +1,4 @@
-# Multi-stage security-hardened Dockerfile for Styx WhatsApp Connector
+# Multi-stage security-hardened Dockerfile for Syndae WhatsApp Connector
 FROM node:20-alpine AS base
 
 # Install necessary runtime packages

@@ -8,7 +8,7 @@ export class MockWhatsAppBridge extends WhatsAppBridgeBase {
   constructor() {
     super();
     this.mode = 'mock';
-    this.userInfo = { id: '15550192834@s.whatsapp.net', phone: '+15550192834', name: 'Styx Operator (Offline Mock Simulator)' };
+    this.userInfo = { id: '15550192834@s.whatsapp.net', phone: '+15550192834', name: 'Syndae Operator (Offline Mock Simulator)' };
   }
 
   async connect() {
@@ -169,7 +169,7 @@ export class MockWhatsAppBridge extends WhatsAppBridgeBase {
 
   /**
    * Simulates an incoming WhatsApp message (e.g. from a friend or external contact)
-   * and fires the 'message' event for the Styx relay.
+   * and fires the 'message' event for the Syndae relay.
    *
    * @param {object} options
    * @param {string} options.from Sender phone number or JID

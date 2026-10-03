@@ -7,7 +7,7 @@ export const logger = pino(
   {
     level: process.env.LOG_LEVEL || 'info',
     redact: {
-      paths: ['key', 'keys', 'creds', 'password', 'token', 'STYX_ACCESS_KEY', 'secret', 'auth'],
+      paths: ['key', 'keys', 'creds', 'password', 'token', 'SYNDAE_ACCESS_KEY', 'secret', 'auth'],
       censor: '[REDACTED_SECRET]'
     }
   },
